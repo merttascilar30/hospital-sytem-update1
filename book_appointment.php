@@ -52,12 +52,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $appointment_time = trim($_POST['appointment_time'] ?? '');
     $notes = trim($_POST['notes'] ?? '');
 
+    if ($notes !== '' && !preg_match('/\A.{0,2000}\z/us', $notes)) {
+        $errors['notes'] = 'Notes must be at most 2000 characters.';
+    }
+
     if ($department_id === '') {
         $errors['department_id'] = 'Please select a department.';
+    } elseif (!preg_match('/^\d{1,10}$/', (string)$department_id)) {
+        $errors['department_id'] = 'Please select a valid department.';
     }
 
     if ($doctor_id === '') {
         $errors['doctor_id'] = 'Please select a doctor.';
+    } elseif (!preg_match('/^\d{1,10}$/', (string)$doctor_id)) {
+        $errors['doctor_id'] = 'Please select a valid doctor.';
+    }
+
+    if (empty($errors['department_id']) && empty($errors['doctor_id'])) {
+        $deptIdInt = (int)$department_id;
+        $docIdInt = (int)$doctor_id;
+        if ($deptIdInt > 0 && $docIdInt > 0) {
+            $matchStmt = $mysqli->prepare(
+                'SELECT 1 FROM doctors WHERE doctor_id = ? AND department_id = ? LIMIT 1'
+            );
+            if ($matchStmt) {
+                $matchStmt->bind_param('ii', $docIdInt, $deptIdInt);
+                $matchStmt->execute();
+                $matchRes = $matchStmt->get_result();
+                $exists = $matchRes ? $matchRes->fetch_row() : null;
+                $matchStmt->close();
+                if (!$exists) {
+                    $errors['doctor_id'] = 'The selected doctor does not belong to the chosen department.';
+                }
+            }
+        }
     }
 
     if ($appointment_date === '') {
@@ -284,6 +312,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     class="form-control <?php echo isset($errors['notes']) ? 'is-invalid' : ''; ?>"
                                     id="notes" name="notes" rows="3"
                                     placeholder="Add any details about your visit."><?php echo htmlspecialchars($notes, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                                <?php if (isset($errors['notes'])): ?>
+                                    <div class="invalid-feedback d-block">
+                                        <?php echo htmlspecialchars($errors['notes'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="col-12 d-flex justify-content-between align-items-center mt-3">
@@ -303,134 +336,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
-<script>
-    // Client-side filtering of doctors by department
-    (function () {
-        const departmentSelect = document.getElementById('department_id');
-        const doctorSelect = document.getElementById('doctor_id');
-        const dateInput = document.getElementById('appointment_date');
-        const timeSlotsContainer = document.getElementById('time-slots');
-        const hiddenTimeInput = document.getElementById('appointment_time');
-
-        function filterDoctors() {
-            const selectedDept = departmentSelect.value;
-            const options = doctorSelect.querySelectorAll('option[data-department]');
-            options.forEach(option => {
-                if (!selectedDept || option.getAttribute('data-department') === selectedDept) {
-                    option.hidden = false;
-                } else {
-                    option.hidden = true;
-                }
-            });
-        }
-
-        function clearTimeSelection() {
-            hiddenTimeInput.value = '';
-            if (timeSlotsContainer) {
-                const buttons = timeSlotsContainer.querySelectorAll('button');
-                buttons.forEach(btn => btn.classList.remove('active'));
-            }
-        }
-
-        function generateTimeSlots(bookedTimes, selectedDate) {
-            if (!timeSlotsContainer) {
-                return;
-            }
-            timeSlotsContainer.innerHTML = '';
-
-            const startMinutes = 8 * 60; // 08:00
-            const endMinutes = 17 * 60;  // 17:00 (exclusive)
-
-            const now = new Date();
-            const todayStr = now.toISOString().slice(0, 10);
-
-            for (let m = startMinutes; m < endMinutes; m += 15) {
-                const hour = String(Math.floor(m / 60)).padStart(2, '0');
-                const minute = String(m % 60).padStart(2, '0');
-                const timeStr = `${hour}:${minute}`;
-
-                const col = document.createElement('div');
-                col.className = 'col-4 col-sm-3 col-md-3';
-
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn btn-sm w-100';
-                btn.textContent = timeStr;
-
-                const isBooked = bookedTimes.includes(timeStr);
-
-                let isInPast = false;
-                if (selectedDate === todayStr) {
-                    const slotDateTime = new Date(selectedDate + 'T' + timeStr + ':00');
-                    if (slotDateTime <= now) {
-                        isInPast = true;
-                    }
-                }
-
-                if (isBooked) {
-                    btn.classList.add('btn-danger');
-                    btn.disabled = true;
-                } else if (isInPast) {
-                    btn.classList.add('btn-outline-secondary');
-                    btn.disabled = true;
-                } else {
-                    btn.classList.add('btn-success');
-                    btn.addEventListener('click', function () {
-                        // Clear previous selection
-                        const buttons = timeSlotsContainer.querySelectorAll('button');
-                        buttons.forEach(b => b.classList.remove('active'));
-
-                        btn.classList.add('active');
-                        hiddenTimeInput.value = timeStr;
-                    });
-                }
-
-                col.appendChild(btn);
-                timeSlotsContainer.appendChild(col);
-            }
-        }
-
-        async function loadAvailableSlots() {
-            clearTimeSelection();
-
-            const doctorId = doctorSelect ? doctorSelect.value : '';
-            const dateVal = dateInput ? dateInput.value : '';
-
-            if (!doctorId || !dateVal) {
-                if (timeSlotsContainer) {
-                    timeSlotsContainer.innerHTML = '';
-                }
-                return;
-            }
-
-            try {
-                const response = await fetch(`get_available_slots.php?doctor_id=${encodeURIComponent(doctorId)}&date=${encodeURIComponent(dateVal)}`);
-                if (!response.ok) {
-                    throw new Error('Failed to load available slots.');
-                }
-                const bookedTimes = await response.json();
-                generateTimeSlots(Array.isArray(bookedTimes) ? bookedTimes : [], dateVal);
-            } catch (e) {
-                if (timeSlotsContainer) {
-                    timeSlotsContainer.innerHTML = '<div class="col-12 text-danger small">Unable to load time slots. Please try again later.</div>';
-                }
-            }
-        }
-
-        if (departmentSelect && doctorSelect) {
-            departmentSelect.addEventListener('change', () => {
-                filterDoctors();
-                loadAvailableSlots();
-            });
-            doctorSelect.addEventListener('change', loadAvailableSlots);
-            filterDoctors();
-        }
-
-        if (dateInput) {
-            dateInput.addEventListener('change', loadAvailableSlots);
-        }
-    })();
-</script>
+<script src="js/script.js"></script>
 </body>
 </html>
 

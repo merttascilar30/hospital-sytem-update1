@@ -1,39 +1,79 @@
--- Hospital Appointment System - Database Schema (Phase 1: Database Foundation)
+-- Hospital Appointment System — MySQL schema
+--
+-- Third Normal Form (3NF) design:
+--   • Every table has a primary key; non-key columns depend only on that key.
+--   • No repeating groups: patients, doctors, departments, and appointments are separate entities.
+--   • Transitive dependencies removed: doctor belongs to department via department_id FK only;
+--     appointment links patient and doctor via FKs (no duplicated names on appointments).
+--   • Patient “preferred department” is modeled as its own table (patient_preferred_departments),
+--     so preference is not embedded redundantly in unrelated columns.
 
--- Ensure database exists
 CREATE DATABASE IF NOT EXISTS hospital_system
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 
 USE hospital_system;
 
--- Drop tables in reverse dependency order (for re-runs during development)
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS appointments;
 DROP TABLE IF EXISTS appointment_logs;
+DROP TABLE IF EXISTS patient_preferred_departments;
 DROP TABLE IF EXISTS doctors;
 DROP TABLE IF EXISTS patients;
 DROP TABLE IF EXISTS departments;
 SET FOREIGN_KEY_CHECKS = 1;
 
--- Departments table
 CREATE TABLE departments (
   department_id INT AUTO_INCREMENT PRIMARY KEY,
   name          VARCHAR(100) NOT NULL,
-  description   VARCHAR(255)
+  description   VARCHAR(255),
+  CONSTRAINT uk_departments_name UNIQUE (name)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
--- Doctors table
+CREATE TABLE patients (
+  patient_id    INT AUTO_INCREMENT PRIMARY KEY,
+  first_name    VARCHAR(100) NOT NULL,
+  last_name     VARCHAR(100) NOT NULL,
+  email         VARCHAR(150) NOT NULL,
+  phone         VARCHAR(20),
+  birth_date    DATE,
+  gender        ENUM('M', 'F', 'Other'),
+  password_hash VARCHAR(255) NOT NULL,
+  notes         TEXT,
+  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_patients_email UNIQUE (email)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
+-- One row per patient: preferred department (separate relation; avoids denormalization on patients).
+CREATE TABLE patient_preferred_departments (
+  patient_id     INT NOT NULL,
+  department_id  INT NOT NULL,
+  PRIMARY KEY (patient_id),
+  CONSTRAINT fk_ppd_patient
+    FOREIGN KEY (patient_id) REFERENCES patients (patient_id)
+      ON UPDATE CASCADE
+      ON DELETE CASCADE,
+  CONSTRAINT fk_ppd_department
+    FOREIGN KEY (department_id) REFERENCES departments (department_id)
+      ON UPDATE CASCADE
+      ON DELETE RESTRICT
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4
+  COLLATE = utf8mb4_unicode_ci;
+
 CREATE TABLE doctors (
   doctor_id     INT AUTO_INCREMENT PRIMARY KEY,
   department_id INT          NOT NULL,
   first_name    VARCHAR(100) NOT NULL,
   last_name     VARCHAR(100) NOT NULL,
-  email         VARCHAR(150) NOT NULL UNIQUE,
+  email         VARCHAR(150) NOT NULL,
   phone         VARCHAR(20),
   created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uk_doctors_email UNIQUE (email),
   CONSTRAINT fk_doctors_department
     FOREIGN KEY (department_id) REFERENCES departments (department_id)
       ON UPDATE CASCADE
@@ -42,23 +82,6 @@ CREATE TABLE doctors (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
--- Patients table
-CREATE TABLE patients (
-  patient_id  INT AUTO_INCREMENT PRIMARY KEY,
-  first_name  VARCHAR(100) NOT NULL,
-  last_name   VARCHAR(100) NOT NULL,
-  email       VARCHAR(150) NOT NULL UNIQUE,
-  phone       VARCHAR(20),
-  birth_date  DATE,
-  gender      ENUM('M', 'F', 'Other'),
-  password_hash VARCHAR(255) NOT NULL,
-  notes       TEXT,
-  created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
-
--- Appointments table
 CREATE TABLE appointments (
   appointment_id       INT AUTO_INCREMENT PRIMARY KEY,
   patient_id           INT          NOT NULL,
@@ -83,21 +106,23 @@ CREATE TABLE appointments (
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
--- Appointment logs table (for audit trail)
 CREATE TABLE appointment_logs (
-  log_id        INT AUTO_INCREMENT PRIMARY KEY,
-  appointment_id INT        NOT NULL,
-  patient_id     INT        NOT NULL,
-  doctor_id      INT        NOT NULL,
-  action_type    ENUM('UPDATED', 'DELETED') NOT NULL,
-  previous_datetime DATETIME NULL,
-  previous_notes    TEXT     NULL,
-  log_created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  log_id            INT AUTO_INCREMENT PRIMARY KEY,
+  appointment_id    INT        NOT NULL,
+  patient_id        INT        NOT NULL,
+  doctor_id         INT        NOT NULL,
+  action_type       ENUM('CREATED', 'UPDATED', 'DELETED') NOT NULL,
+  previous_datetime DATETIME   NULL,
+  previous_notes    TEXT       NULL,
+  log_created_at    DATETIME   NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
 
--- Trigger: automatically update updated_at on appointment updates
+-- ---------------------------------------------------------------------------
+-- Triggers (hospital appointment workflow)
+-- ---------------------------------------------------------------------------
+
 DROP TRIGGER IF EXISTS trg_appointments_set_updated_at;
 DELIMITER $$
 CREATE TRIGGER trg_appointments_set_updated_at
@@ -108,7 +133,17 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Trigger: log updates to appointments
+DROP TRIGGER IF EXISTS trg_appointments_log_insert;
+DELIMITER $$
+CREATE TRIGGER trg_appointments_log_insert
+AFTER INSERT ON appointments
+FOR EACH ROW
+BEGIN
+  INSERT INTO appointment_logs (appointment_id, patient_id, doctor_id, action_type, previous_datetime, previous_notes)
+  VALUES (NEW.appointment_id, NEW.patient_id, NEW.doctor_id, 'CREATED', NULL, NULL);
+END$$
+DELIMITER ;
+
 DROP TRIGGER IF EXISTS trg_appointments_log_update;
 DELIMITER $$
 CREATE TRIGGER trg_appointments_log_update
@@ -120,7 +155,6 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Trigger: log deletions of appointments
 DROP TRIGGER IF EXISTS trg_appointments_log_delete;
 DELIMITER $$
 CREATE TRIGGER trg_appointments_log_delete
@@ -132,7 +166,10 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Stored Procedure: get appointments for a given doctor within a date range
+-- ---------------------------------------------------------------------------
+-- Stored procedures
+-- ---------------------------------------------------------------------------
+
 DROP PROCEDURE IF EXISTS sp_get_doctor_appointments;
 DELIMITER $$
 CREATE PROCEDURE sp_get_doctor_appointments (
@@ -159,7 +196,6 @@ BEGIN
 END$$
 DELIMITER ;
 
--- Stored Procedure: get total appointments for a patient
 DROP PROCEDURE IF EXISTS sp_get_patient_appointment_count;
 DELIMITER $$
 CREATE PROCEDURE sp_get_patient_appointment_count (
@@ -172,3 +208,17 @@ BEGIN
 END$$
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS sp_cancel_appointment_safe;
+DELIMITER $$
+CREATE PROCEDURE sp_cancel_appointment_safe (
+  IN p_appointment_id INT,
+  IN p_patient_id     INT,
+  OUT p_rows_deleted  INT
+)
+BEGIN
+  DELETE FROM appointments
+  WHERE appointment_id = p_appointment_id
+    AND patient_id = p_patient_id;
+  SET p_rows_deleted = ROW_COUNT();
+END$$
+DELIMITER ;

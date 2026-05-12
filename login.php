@@ -103,17 +103,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <div class="mb-3">
                             <label for="password" class="form-label">Password</label>
-                            <input type="password"
-                                   class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>"
-                                   id="password" name="password" required>
+                            <div class="input-group">
+                                <input type="password"
+                                       class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>"
+                                       id="password" name="password" required
+                                       autocomplete="current-password">
+                                <button class="btn btn-outline-secondary" type="button" id="toggle_login_password"
+                                        data-password-toggle="password"
+                                        data-label-show="Show" data-label-hide="Hide"
+                                        aria-pressed="false" aria-controls="password">
+                                    Show
+                                </button>
+                            </div>
                             <?php if (isset($errors['password'])): ?>
-                                <div class="invalid-feedback">
+                                <div class="invalid-feedback d-block">
                                     <?php echo htmlspecialchars($errors['password'], ENT_QUOTES, 'UTF-8'); ?>
                                 </div>
                             <?php endif; ?>
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center">
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember_me" name="remember_me" value="1">
+                            <label class="form-check-label" for="remember_me">Remember this device</label>
+                        </div>
+
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center gap-2">
                             <button type="submit" class="btn btn-primary">
                                 Login
                             </button>
@@ -129,6 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+<script src="js/script.js"></script>
 </body>
 </html>
 

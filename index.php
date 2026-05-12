@@ -182,7 +182,7 @@ if ($stmt) {
                                                 <?php echo htmlspecialchars($appointment['status'], ENT_QUOTES, 'UTF-8'); ?>
                                             </span>
                                         </td>
-                                        <td style="max-width: 200px;">
+                                        <td class="table-notes-cell">
                                             <small class="text-muted d-block text-truncate" title="<?php echo htmlspecialchars($appointment['notes'], ENT_QUOTES, 'UTF-8'); ?>">
                                                 <?php echo htmlspecialchars($appointment['notes'], ENT_QUOTES, 'UTF-8'); ?>
                                             </small>
@@ -193,11 +193,11 @@ if ($stmt) {
                                                    class="btn btn-outline-primary">
                                                     Edit
                                                 </a>
-                                                <form action="actions/cancel_appointment.php" method="post" class="d-inline">
+                                                <form action="actions/cancel_appointment.php" method="post" class="d-inline"
+                                                      data-confirm="Are you sure you want to cancel this appointment?">
                                                     <input type="hidden" name="appointment_id"
                                                            value="<?php echo (int)$appointment['appointment_id']; ?>">
-                                                    <button type="submit" class="btn btn-outline-danger"
-                                                            onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                                    <button type="submit" class="btn btn-outline-danger">
                                                         Cancel
                                                     </button>
                                                 </form>
@@ -218,6 +218,7 @@ if ($stmt) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+<script src="js/script.js"></script>
 </body>
 </html>
 

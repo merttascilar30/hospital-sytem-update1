@@ -1,2 +1,22 @@
-/* Main stylesheet for Hospital Appointment System */
+/**
+ * Hospital Appointment System — custom styles (no inline CSS in PHP templates).
+ */
 
+/* Dashboard: keep long notes readable without inline max-width */
+.table-notes-cell {
+    max-width: 12.5rem;
+}
+
+@media (min-width: 768px) {
+    .table-notes-cell {
+        max-width: 14rem;
+    }
+}
+
+/* Slightly tighter card headers on small screens */
+@media (max-width: 575.98px) {
+    .card-header h4,
+    .card-header .h4 {
+        font-size: 1.1rem;
+    }
+}

@@ -56,8 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
     $appointment_datetime = trim($_POST['appointment_datetime'] ?? '');
     $notes = trim($_POST['notes'] ?? '');
 
+    if ($notes !== '' && !preg_match('/\A.{0,2000}\z/us', $notes)) {
+        $errors['notes'] = 'Notes must be at most 2000 characters.';
+    }
+
     if ($appointment_datetime === '') {
         $errors['appointment_datetime'] = 'Please select a date and time.';
+    } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $appointment_datetime)) {
+        $errors['appointment_datetime'] = 'Please enter a valid date and time.';
     } else {
         $dt = DateTime::createFromFormat('Y-m-d\TH:i', $appointment_datetime);
         if (!$dt) {
@@ -190,6 +196,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                     class="form-control <?php echo isset($errors['notes']) ? 'is-invalid' : ''; ?>"
                                     id="notes" name="notes" rows="3"
                                     placeholder="Update any details about your visit."><?php echo htmlspecialchars($notes, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                                <?php if (isset($errors['notes'])): ?>
+                                    <div class="invalid-feedback d-block">
+                                        <?php echo htmlspecialchars($errors['notes'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center">
@@ -211,6 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+<script src="js/script.js"></script>
 </body>
 </html>
 

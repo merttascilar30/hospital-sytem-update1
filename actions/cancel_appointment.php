@@ -10,7 +10,8 @@ if (!isset($_SESSION['user_id'])) {
 $patientId = (int)$_SESSION['user_id'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $appointment_id = isset($_POST['appointment_id']) ? (int)$_POST['appointment_id'] : 0;
+    $rawId = isset($_POST['appointment_id']) ? trim((string)$_POST['appointment_id']) : '';
+    $appointment_id = ($rawId !== '' && preg_match('/^\d{1,10}$/', $rawId)) ? (int)$rawId : 0;
 
     if ($appointment_id > 0) {
         $stmt = $mysqli->prepare(

@@ -73,6 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['confirm_password'] = 'Passwords do not match.';
     }
 
+    if ($notes !== '' && !preg_match('/\A.{0,2000}\z/us', $notes)) {
+        $errors['notes'] = 'Notes must be at most 2000 characters.';
+    }
+
     if (!$terms_accepted) {
         $errors['terms'] = 'You must accept the terms and conditions.';
     }
@@ -89,45 +93,93 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         );
 
-        if ($stmt) {
-            // MySQLi bind_param requires variables passed by reference
-            $first_name_param = $first_name;
-            $last_name_param = $last_name;
-            $email_param = $email;
-            $phone_param = $phone;
-            $gender_param = $gender;
-            $password_hash_param = $password_hash;
-            $notes_param = $notes;
+            if ($stmt) {
+                $first_name_param = $first_name;
+                $last_name_param = $last_name;
+                $email_param = $email;
+                $phone_param = $phone;
+                $gender_param = $gender;
+                $password_hash_param = $password_hash;
+                $notes_param = $notes;
 
-            $stmt->bind_param(
-                'ssssssss',
-                $first_name_param,
-                $last_name_param,
-                $email_param,
-                $phone_param,
-                $birth_date_param,
-                $gender_param,
-                $password_hash_param,
-                $notes_param
-            );
+                $stmt->bind_param(
+                    'ssssssss',
+                    $first_name_param,
+                    $last_name_param,
+                    $email_param,
+                    $phone_param,
+                    $birth_date_param,
+                    $gender_param,
+                    $password_hash_param,
+                    $notes_param
+                );
 
-            if ($stmt->execute()) {
-                $success = true;
-                // Reset form values
-                $first_name = $last_name = $email = $phone = $birth_date = $gender = $notes = $preferred_department = '';
-                $terms_accepted = false;
-            } else {
-                if ($mysqli->errno === 1062) {
-                    $errors['email'] = 'This email is already registered.';
+                $mysqli->begin_transaction();
+                $insertOk = $stmt->execute();
+
+                if (!$insertOk) {
+                    $mysqli->rollback();
+                    if ($mysqli->errno === 1062) {
+                        $errors['email'] = 'This email is already registered.';
+                    } else {
+                        $errors['general'] = 'An unexpected error occurred. Please try again later.';
+                    }
+                    $stmt->close();
                 } else {
-                    $errors['general'] = 'An unexpected error occurred. Please try again later.';
-                }
-            }
+                    $newPatientId = (int)$mysqli->insert_id;
 
-            $stmt->close();
-        } else {
-            $errors['general'] = 'Could not prepare registration statement.';
-        }
+                    $slugToName = [
+                        'cardiology' => 'Cardiology',
+                        'neurology' => 'Neurology',
+                        'orthopedics' => 'Orthopedics',
+                        'pediatrics' => 'Pediatrics',
+                    ];
+                    $deptName = $slugToName[$preferred_department] ?? '';
+                    $departmentIdForPref = null;
+
+                    if ($deptName !== '') {
+                        $dStmt = $mysqli->prepare('SELECT department_id FROM departments WHERE name = ? LIMIT 1');
+                        if ($dStmt) {
+                            $dStmt->bind_param('s', $deptName);
+                            $dStmt->execute();
+                            $dRes = $dStmt->get_result();
+                            $dRow = $dRes ? $dRes->fetch_assoc() : null;
+                            $dStmt->close();
+                            if ($dRow) {
+                                $departmentIdForPref = (int)$dRow['department_id'];
+                            }
+                        }
+                    }
+
+                    $prefOk = true;
+                    if ($departmentIdForPref !== null) {
+                        $pStmt = $mysqli->prepare(
+                            'INSERT INTO patient_preferred_departments (patient_id, department_id) VALUES (?, ?)'
+                        );
+                        if ($pStmt) {
+                            $pStmt->bind_param('ii', $newPatientId, $departmentIdForPref);
+                            $prefOk = $pStmt->execute();
+                            $pStmt->close();
+                        } else {
+                            $prefOk = false;
+                        }
+                    }
+
+                    if (!$prefOk) {
+                        $mysqli->rollback();
+                        $errors['general'] = 'An unexpected error occurred. Please try again later.';
+                        $stmt->close();
+                    } else {
+                        $mysqli->commit();
+                        $stmt->close();
+                        $success = true;
+                        $first_name = $last_name = $email = $phone = $birth_date = $gender = $notes = $preferred_department = '';
+                        $terms_accepted = false;
+                    }
+                }
+            } else {
+                $errors['general'] = 'Could not prepare registration statement.';
+            }
     }
 }
 ?>
@@ -311,6 +363,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     class="form-control <?php echo isset($errors['notes']) ? 'is-invalid' : ''; ?>"
                                     id="notes" name="notes" rows="3"
                                     placeholder="Describe any important medical history, allergies, or other notes."><?php echo htmlspecialchars($notes, ENT_QUOTES, 'UTF-8'); ?></textarea>
+                                <?php if (isset($errors['notes'])): ?>
+                                    <div class="invalid-feedback d-block">
+                                        <?php echo htmlspecialchars($errors['notes'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php endif; ?>
                             </div>
 
                             <div class="col-12">
@@ -346,6 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
+<script src="js/script.js"></script>
 </body>
 </html>
 
