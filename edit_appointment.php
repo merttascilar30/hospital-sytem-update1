@@ -14,13 +14,15 @@ $success = false;
 $submitted = false;
 
 $appointment_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-$appointment_datetime = '';
+$doctor_id = 0;
+$appointment_date = '';
+$appointment_time = '';
 $notes = '';
 
 // Load appointment for this patient
 if ($appointment_id > 0) {
     $stmt = $mysqli->prepare(
-        "SELECT appointment_id, appointment_datetime, notes
+        "SELECT appointment_id, doctor_id, appointment_datetime, notes
          FROM appointments
          WHERE appointment_id = ? AND patient_id = ?
          LIMIT 1"
@@ -36,9 +38,11 @@ if ($appointment_id > 0) {
         $stmt->close();
 
         if ($appointment) {
+            $doctor_id = (int)$appointment['doctor_id'];
             $dt = DateTime::createFromFormat('Y-m-d H:i:s', $appointment['appointment_datetime']);
             if ($dt) {
-                $appointment_datetime = $dt->format('Y-m-d\TH:i');
+                $appointment_date = $dt->format('Y-m-d');
+                $appointment_time = $dt->format('H:i');
             }
             $notes = $appointment['notes'] ?? '';
         } else {
@@ -53,35 +57,41 @@ if ($appointment_id > 0) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
     $submitted = true;
-    $appointment_datetime = trim($_POST['appointment_datetime'] ?? '');
+    $appointment_date = trim($_POST['appointment_date'] ?? '');
+    $appointment_time = trim($_POST['appointment_time'] ?? '');
     $notes = trim($_POST['notes'] ?? '');
 
     if ($notes !== '' && !preg_match('/\A.{0,2000}\z/us', $notes)) {
         $errors['notes'] = 'Notes must be at most 2000 characters.';
     }
 
-    if ($appointment_datetime === '') {
-        $errors['appointment_datetime'] = 'Please select a date and time.';
-    } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/', $appointment_datetime)) {
-        $errors['appointment_datetime'] = 'Please enter a valid date and time.';
-    } else {
-        $dt = DateTime::createFromFormat('Y-m-d\TH:i', $appointment_datetime);
-        if (!$dt) {
-            $errors['appointment_datetime'] = 'Please enter a valid date and time.';
-        } else {
-            // Prevent updating an appointment to a past date, including earlier hours today
-            $now = new DateTime('now');
-            $selectedDate = $dt->format('Y-m-d');
-            $todayDate = $now->format('Y-m-d');
+    if ($appointment_date === '') {
+        $errors['appointment_date'] = 'Please select a date.';
+    } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $appointment_date)) {
+        $errors['appointment_date'] = 'Please enter a valid date (YYYY-MM-DD).';
+    }
 
-            if ($selectedDate < $todayDate || ($selectedDate === $todayDate && $dt <= $now)) {
-                $errors['appointment_datetime'] = 'You cannot book an appointment for a past date.';
+    if ($appointment_time === '') {
+        $errors['appointment_time'] = 'Please select a time slot.';
+    } elseif (!preg_match('/^\d{2}:\d{2}$/', $appointment_time)) {
+        $errors['appointment_time'] = 'Please select a valid time slot.';
+    }
+
+    $dt = null;
+    if ($appointment_date !== '' && $appointment_time !== '' && empty($errors['appointment_date']) && empty($errors['appointment_time'])) {
+        $combined = $appointment_date . ' ' . $appointment_time . ':00';
+        $dt = DateTime::createFromFormat('Y-m-d H:i:s', $combined);
+        if (!$dt) {
+            $errors['appointment_date'] = 'Please enter a valid date.';
+        } else {
+            $now = new DateTime('now');
+            if ($dt <= $now) {
+                $errors['appointment_date'] = 'You cannot book an appointment for a past date.';
             }
         }
     }
 
     if (empty($errors)) {
-        $dt = DateTime::createFromFormat('Y-m-d\TH:i', $appointment_datetime);
         $appointmentSql = $dt ? $dt->format('Y-m-d H:i:s') : null;
 
         $stmt = $mysqli->prepare(
@@ -110,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                 exit;
             } else {
                 if ($mysqli->errno === 1062) {
-                    $errors['appointment_datetime'] = 'This doctor already has an appointment at the selected time.';
+                    $errors['appointment_time'] = 'This doctor already has an appointment at the selected time.';
                 } else {
                     $errors['general'] = 'An unexpected error occurred while updating the appointment.';
                 }
@@ -156,7 +166,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
 
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-lg-6">
+        <div class="col-lg-8 col-xl-7">
             <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">Edit Appointment</h4>
@@ -176,21 +186,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
 
                     <?php if (empty($errors['general'])): ?>
                         <form method="post" novalidate>
-                            <div class="mb-3">
-                                <label for="appointment_datetime" class="form-label">Date &amp; Time</label>
-                                <input type="datetime-local"
-                                       class="form-control <?php echo isset($errors['appointment_datetime']) ? 'is-invalid' : ''; ?>"
-                                       id="appointment_datetime" name="appointment_datetime"
-                                       value="<?php echo htmlspecialchars($appointment_datetime, ENT_QUOTES, 'UTF-8'); ?>"
+                            <div id="edit-appointment-meta" class="d-none"
+                                 data-doctor-id="<?php echo (int)$doctor_id; ?>"
+                                 data-appointment-id="<?php echo (int)$appointment_id; ?>"
+                                 aria-hidden="true"></div>
+                            <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="appointment_date" class="form-label">Date</label>
+                                <input type="date"
+                                       class="form-control <?php echo isset($errors['appointment_date']) ? 'is-invalid' : ''; ?>"
+                                       id="appointment_date" name="appointment_date"
+                                       value="<?php echo htmlspecialchars($appointment_date, ENT_QUOTES, 'UTF-8'); ?>"
                                        required>
-                                <?php if (isset($errors['appointment_datetime'])): ?>
+                                <?php if (isset($errors['appointment_date'])): ?>
                                     <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['appointment_datetime'], ENT_QUOTES, 'UTF-8'); ?>
+                                        <?php echo htmlspecialchars($errors['appointment_date'], ENT_QUOTES, 'UTF-8'); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
 
-                            <div class="mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label d-block">Time Slots</label>
+                                <input type="hidden" id="appointment_time" name="appointment_time"
+                                       value="<?php echo htmlspecialchars($appointment_time, ENT_QUOTES, 'UTF-8'); ?>">
+                                <div id="time-slots" class="row g-2">
+                                    <!-- Time slot buttons will be injected here via JavaScript -->
+                                </div>
+                                <?php if (isset($errors['appointment_time'])): ?>
+                                    <div class="text-danger small mt-1">
+                                        <?php echo htmlspecialchars($errors['appointment_time'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                            </div>
+
+                            <div class="mb-3 mt-3">
                                 <label for="notes" class="form-label">Notes</label>
                                 <textarea
                                     class="form-control <?php echo isset($errors['notes']) ? 'is-invalid' : ''; ?>"

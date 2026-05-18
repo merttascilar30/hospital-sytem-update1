@@ -12,6 +12,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $doctorId = isset($_GET['doctor_id']) ? (int)$_GET['doctor_id'] : 0;
 $date = isset($_GET['date']) ? trim($_GET['date']) : '';
+$excludeAppointmentId = isset($_GET['exclude_appointment_id']) ? (int)$_GET['exclude_appointment_id'] : 0;
 
 // Basic validation: require doctor and valid date (YYYY-MM-DD)
 if ($doctorId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
@@ -19,20 +20,45 @@ if ($doctorId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
     exit;
 }
 
+$patientId = (int)$_SESSION['user_id'];
+$excludeValid = false;
+if ($excludeAppointmentId > 0) {
+    $verifyStmt = $mysqli->prepare(
+        'SELECT 1 FROM appointments
+         WHERE appointment_id = ? AND patient_id = ? AND doctor_id = ?
+         LIMIT 1'
+    );
+    if ($verifyStmt) {
+        $verifyStmt->bind_param('iii', $excludeAppointmentId, $patientId, $doctorId);
+        $verifyStmt->execute();
+        $verifyRes = $verifyStmt->get_result();
+        $excludeValid = $verifyRes && $verifyRes->fetch_row();
+        $verifyStmt->close();
+    }
+}
+
 $bookedTimes = [];
 
-$stmt = $mysqli->prepare(
-    "SELECT appointment_datetime
-     FROM appointments
-     WHERE doctor_id = ?
-       AND DATE(appointment_datetime) = ?
-     ORDER BY appointment_datetime"
-);
+$sql = "SELECT appointment_datetime
+        FROM appointments
+        WHERE doctor_id = ?
+          AND DATE(appointment_datetime) = ?";
+if ($excludeValid) {
+    $sql .= ' AND appointment_id <> ?';
+}
+$sql .= ' ORDER BY appointment_datetime';
+
+$stmt = $mysqli->prepare($sql);
 
 if ($stmt) {
     $doctor_id_param = $doctorId;
     $date_param = $date;
-    $stmt->bind_param('is', $doctor_id_param, $date_param);
+    if ($excludeValid) {
+        $exclude_param = $excludeAppointmentId;
+        $stmt->bind_param('isi', $doctor_id_param, $date_param, $exclude_param);
+    } else {
+        $stmt->bind_param('is', $doctor_id_param, $date_param);
+    }
     $stmt->execute();
     $result = $stmt->get_result();
 
