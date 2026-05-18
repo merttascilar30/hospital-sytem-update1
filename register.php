@@ -12,7 +12,6 @@ $phone = '';
 $birth_date = '';
 $gender = '';
 $notes = '';
-$preferred_department = '';
 $terms_accepted = false;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -24,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $birth_date = trim($_POST['birth_date'] ?? '');
     $gender = $_POST['gender'] ?? '';
     $notes = trim($_POST['notes'] ?? '');
-    $preferred_department = $_POST['preferred_department'] ?? '';
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $terms_accepted = isset($_POST['terms']);
@@ -59,10 +57,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!in_array($gender, ['M', 'F', 'Other'], true)) {
         $errors['gender'] = 'Please select a gender.';
-    }
-
-    if (!in_array($preferred_department, ['cardiology', 'neurology', 'orthopedics', 'pediatrics'], true)) {
-        $errors['preferred_department'] = 'Please select a preferred department.';
     }
 
     if ($password === '' || !preg_match($passwordPattern, $password)) {
@@ -114,68 +108,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $notes_param
                 );
 
-                $mysqli->begin_transaction();
-                $insertOk = $stmt->execute();
-
-                if (!$insertOk) {
-                    $mysqli->rollback();
+                if ($stmt->execute()) {
+                    $stmt->close();
+                    $success = true;
+                    $first_name = $last_name = $email = $phone = $birth_date = $gender = $notes = '';
+                    $terms_accepted = false;
+                } else {
                     if ($mysqli->errno === 1062) {
                         $errors['email'] = 'This email is already registered.';
                     } else {
                         $errors['general'] = 'An unexpected error occurred. Please try again later.';
                     }
                     $stmt->close();
-                } else {
-                    $newPatientId = (int)$mysqli->insert_id;
-
-                    $slugToName = [
-                        'cardiology' => 'Cardiology',
-                        'neurology' => 'Neurology',
-                        'orthopedics' => 'Orthopedics',
-                        'pediatrics' => 'Pediatrics',
-                    ];
-                    $deptName = $slugToName[$preferred_department] ?? '';
-                    $departmentIdForPref = null;
-
-                    if ($deptName !== '') {
-                        $dStmt = $mysqli->prepare('SELECT department_id FROM departments WHERE name = ? LIMIT 1');
-                        if ($dStmt) {
-                            $dStmt->bind_param('s', $deptName);
-                            $dStmt->execute();
-                            $dRes = $dStmt->get_result();
-                            $dRow = $dRes ? $dRes->fetch_assoc() : null;
-                            $dStmt->close();
-                            if ($dRow) {
-                                $departmentIdForPref = (int)$dRow['department_id'];
-                            }
-                        }
-                    }
-
-                    $prefOk = true;
-                    if ($departmentIdForPref !== null) {
-                        $pStmt = $mysqli->prepare(
-                            'INSERT INTO patient_preferred_departments (patient_id, department_id) VALUES (?, ?)'
-                        );
-                        if ($pStmt) {
-                            $pStmt->bind_param('ii', $newPatientId, $departmentIdForPref);
-                            $prefOk = $pStmt->execute();
-                            $pStmt->close();
-                        } else {
-                            $prefOk = false;
-                        }
-                    }
-
-                    if (!$prefOk) {
-                        $mysqli->rollback();
-                        $errors['general'] = 'An unexpected error occurred. Please try again later.';
-                        $stmt->close();
-                    } else {
-                        $mysqli->commit();
-                        $stmt->close();
-                        $success = true;
-                        $first_name = $last_name = $email = $phone = $birth_date = $gender = $notes = $preferred_department = '';
-                        $terms_accepted = false;
-                    }
                 }
             } else {
                 $errors['general'] = 'Could not prepare registration statement.';
@@ -303,32 +247,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?php if (isset($errors['gender'])): ?>
                                     <div class="text-danger small mt-1">
                                         <?php echo htmlspecialchars($errors['gender'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="preferred_department" class="form-label">Preferred Department</label>
-                                <select
-                                    class="form-select <?php echo isset($errors['preferred_department']) ? 'is-invalid' : ''; ?>"
-                                    id="preferred_department" name="preferred_department" required>
-                                    <option value="">Choose...</option>
-                                    <option value="cardiology" <?php echo $preferred_department === 'cardiology' ? 'selected' : ''; ?>>
-                                        Cardiology
-                                    </option>
-                                    <option value="neurology" <?php echo $preferred_department === 'neurology' ? 'selected' : ''; ?>>
-                                        Neurology
-                                    </option>
-                                    <option value="orthopedics" <?php echo $preferred_department === 'orthopedics' ? 'selected' : ''; ?>>
-                                        Orthopedics
-                                    </option>
-                                    <option value="pediatrics" <?php echo $preferred_department === 'pediatrics' ? 'selected' : ''; ?>>
-                                        Pediatrics
-                                    </option>
-                                </select>
-                                <?php if (isset($errors['preferred_department'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['preferred_department'], ENT_QUOTES, 'UTF-8'); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
