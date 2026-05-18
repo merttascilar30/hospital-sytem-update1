@@ -5,8 +5,6 @@
 --   • No repeating groups: patients, doctors, departments, and appointments are separate entities.
 --   • Transitive dependencies removed: doctor belongs to department via department_id FK only;
 --     appointment links patient and doctor via FKs (no duplicated names on appointments).
---   • Patient “preferred department” is modeled as its own table (patient_preferred_departments),
---     so preference is not embedded redundantly in unrelated columns.
 
 CREATE DATABASE IF NOT EXISTS hospital_system
   CHARACTER SET utf8mb4
@@ -17,7 +15,6 @@ USE hospital_system;
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS appointments;
 DROP TABLE IF EXISTS appointment_logs;
-DROP TABLE IF EXISTS patient_preferred_departments;
 DROP TABLE IF EXISTS doctors;
 DROP TABLE IF EXISTS patients;
 DROP TABLE IF EXISTS departments;
@@ -44,23 +41,6 @@ CREATE TABLE patients (
   notes         TEXT,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uk_patients_email UNIQUE (email)
-) ENGINE = InnoDB
-  DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_unicode_ci;
-
--- One row per patient: preferred department (separate relation; avoids denormalization on patients).
-CREATE TABLE patient_preferred_departments (
-  patient_id     INT NOT NULL,
-  department_id  INT NOT NULL,
-  PRIMARY KEY (patient_id),
-  CONSTRAINT fk_ppd_patient
-    FOREIGN KEY (patient_id) REFERENCES patients (patient_id)
-      ON UPDATE CASCADE
-      ON DELETE CASCADE,
-  CONSTRAINT fk_ppd_department
-    FOREIGN KEY (department_id) REFERENCES departments (department_id)
-      ON UPDATE CASCADE
-      ON DELETE RESTRICT
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
   COLLATE = utf8mb4_unicode_ci;
