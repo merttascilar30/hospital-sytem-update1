@@ -41,9 +41,9 @@ if ($spStmt) {
     }
 }
 
-// Fetch appointments for this patient with JOINs
+// Upcoming appointments for this patient
 $appointments = [];
-$stmt = $mysqli->prepare(
+$upcomingStmt = $mysqli->prepare(
     "SELECT
         a.appointment_id,
         a.appointment_datetime,
@@ -56,18 +56,48 @@ $stmt = $mysqli->prepare(
      INNER JOIN doctors d ON d.doctor_id = a.doctor_id
      INNER JOIN departments dep ON dep.department_id = d.department_id
      WHERE a.patient_id = ?
-     ORDER BY a.appointment_datetime"
+       AND a.appointment_datetime >= NOW()
+     ORDER BY a.appointment_datetime ASC"
 );
 
-if ($stmt) {
-    $patient_id_param = $patientId;
-    $stmt->bind_param('i', $patient_id_param);
-    $stmt->execute();
-    $result = $stmt->get_result();
+if ($upcomingStmt) {
+    $upcomingStmt->bind_param('i', $patientId);
+    $upcomingStmt->execute();
+    $result = $upcomingStmt->get_result();
     while ($row = $result->fetch_assoc()) {
         $appointments[] = $row;
     }
-    $stmt->close();
+    $result->free();
+    $upcomingStmt->close();
+}
+
+// Past appointment history
+$pastAppointments = [];
+$pastStmt = $mysqli->prepare(
+    "SELECT
+        a.appointment_id,
+        a.appointment_datetime,
+        a.status,
+        d.first_name AS doctor_first_name,
+        d.last_name  AS doctor_last_name,
+        dep.name     AS department_name
+     FROM appointments a
+     INNER JOIN doctors d ON d.doctor_id = a.doctor_id
+     INNER JOIN departments dep ON dep.department_id = d.department_id
+     WHERE a.patient_id = ?
+       AND a.appointment_datetime < NOW()
+     ORDER BY a.appointment_datetime DESC"
+);
+
+if ($pastStmt) {
+    $pastStmt->bind_param('i', $patientId);
+    $pastStmt->execute();
+    $result = $pastStmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $pastAppointments[] = $row;
+    }
+    $result->free();
+    $pastStmt->close();
 }
 ?>
 <!doctype html>
@@ -131,7 +161,7 @@ if ($stmt) {
                 <div class="card-body">
                     <div class="row align-items-center mb-3 g-3">
                         <div class="col-12 col-md-6">
-                            <h2 class="h5 mb-0">Your Appointments</h2>
+                            <h2 class="h5 mb-0">Upcoming Appointments</h2>
                         </div>
                         <div class="col-12 col-md-6 text-md-end">
                             <div class="card border-0 bg-light d-inline-block">
@@ -147,7 +177,7 @@ if ($stmt) {
 
                     <?php if (empty($appointments)): ?>
                         <p class="text-muted mb-0">
-                            You do not have any appointments yet.
+                            You do not have any upcoming appointments.
                         </p>
                     <?php else: ?>
                         <div class="table-responsive">
@@ -198,6 +228,55 @@ if ($stmt) {
                                                     </button>
                                                 </form>
                                             </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Appointment History</h2>
+                    <?php if (empty($pastAppointments)): ?>
+                        <p class="text-muted mb-0">No past appointments.</p>
+                    <?php else: ?>
+                        <div class="table-responsive">
+                            <table class="table table-striped align-middle mb-0">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Date &amp; Time</th>
+                                    <th scope="col">Doctor</th>
+                                    <th scope="col">Polyclinic</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <?php foreach ($pastAppointments as $appointment): ?>
+                                    <tr>
+                                        <td>
+                                            <?php
+                                            $dt = DateTime::createFromFormat('Y-m-d H:i:s', $appointment['appointment_datetime']);
+                                            echo $dt
+                                                ? htmlspecialchars($dt->format('d.m.Y H:i'), ENT_QUOTES, 'UTF-8')
+                                                : htmlspecialchars($appointment['appointment_datetime'], ENT_QUOTES, 'UTF-8');
+                                            ?>
+                                        </td>
+                                        <td><?php echo htmlspecialchars(
+                                            $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'],
+                                            ENT_QUOTES,
+                                            'UTF-8'
+                                        ); ?></td>
+                                        <td><?php echo htmlspecialchars($appointment['department_name'], ENT_QUOTES, 'UTF-8'); ?></td>
+                                        <td>
+                                            <span class="badge bg-secondary text-capitalize">
+                                                <?php echo htmlspecialchars($appointment['status'], ENT_QUOTES, 'UTF-8'); ?>
+                                            </span>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

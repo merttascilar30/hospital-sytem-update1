@@ -39,9 +39,11 @@ CREATE TABLE patients (
   phone         VARCHAR(20),
   birth_date    DATE,
   gender        ENUM('M', 'F', 'Other'),
-  password_hash VARCHAR(255) NOT NULL,
-  notes         TEXT,
-  created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  password_hash     VARCHAR(255) NOT NULL,
+  security_question VARCHAR(255) NOT NULL,
+  security_answer   VARCHAR(255) NOT NULL,
+  notes             TEXT,
+  created_at        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT uk_patients_email UNIQUE (email)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4

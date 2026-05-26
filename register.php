@@ -1,8 +1,10 @@
 <?php
 require_once __DIR__ . '/includes/db_connection.php';
+require_once __DIR__ . '/includes/security_questions.php';
 
 $errors = [];
 $success = false;
+$securityQuestions = hs_security_questions();
 
 // Initialize form values
 $first_name = '';
@@ -11,6 +13,8 @@ $email = '';
 $phone = '';
 $birth_date = '';
 $gender = '';
+$security_question = '';
+$security_answer = '';
 $notes = '';
 $terms_accepted = false;
 
@@ -23,6 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $birth_date = trim($_POST['birth_date'] ?? '');
     $gender = $_POST['gender'] ?? '';
     $notes = trim($_POST['notes'] ?? '');
+    $security_question = $_POST['security_question'] ?? '';
+    $security_answer = trim($_POST['security_answer'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm_password = $_POST['confirm_password'] ?? '';
     $terms_accepted = isset($_POST['terms']);
@@ -59,6 +65,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['gender'] = 'Please select a gender.';
     }
 
+    if (!hs_is_valid_security_question($security_question)) {
+        $errors['security_question'] = 'Please select a security question.';
+    }
+
+    if ($security_answer === '' || !preg_match('/\A.{2,100}\z/us', $security_answer)) {
+        $errors['security_answer'] = 'Please enter a security answer (2–100 characters).';
+    }
+
     if ($password === '' || !preg_match($passwordPattern, $password)) {
         $errors['password'] = 'Password must be at least 8 characters and include at least one letter and one number.';
     }
@@ -82,9 +96,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Normalize nullable date for bind_param (must be a variable, not an expression)
         $birth_date_param = $birth_date !== '' ? $birth_date : null;
 
+        $security_answer_hash = hs_hash_security_answer($security_answer);
+
         $stmt = $mysqli->prepare(
-            "INSERT INTO patients (first_name, last_name, email, phone, birth_date, gender, password_hash, notes)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT INTO patients (
+                first_name, last_name, email, phone, birth_date, gender,
+                password_hash, security_question, security_answer, notes
+             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         );
 
             if ($stmt) {
@@ -94,10 +112,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $phone_param = $phone;
                 $gender_param = $gender;
                 $password_hash_param = $password_hash;
+                $security_question_param = $security_question;
+                $security_answer_param = $security_answer_hash;
                 $notes_param = $notes;
 
                 $stmt->bind_param(
-                    'ssssssss',
+                    'ssssssssss',
                     $first_name_param,
                     $last_name_param,
                     $email_param,
@@ -105,6 +125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $birth_date_param,
                     $gender_param,
                     $password_hash_param,
+                    $security_question_param,
+                    $security_answer_param,
                     $notes_param
                 );
 
@@ -112,6 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmt->close();
                     $success = true;
                     $first_name = $last_name = $email = $phone = $birth_date = $gender = $notes = '';
+                    $security_question = $security_answer = '';
                     $terms_accepted = false;
                 } else {
                     if ($mysqli->errno === 1062) {
@@ -248,6 +271,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?php if (isset($errors['gender'])): ?>
                                     <div class="text-danger small mt-1">
                                         <?php echo htmlspecialchars($errors['gender'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="security_question" class="form-label">Security Question</label>
+                                <select class="form-select <?php echo isset($errors['security_question']) ? 'is-invalid' : ''; ?>"
+                                        id="security_question" name="security_question" required>
+                                    <option value="">Choose a question...</option>
+                                    <?php foreach ($securityQuestions as $key => $label): ?>
+                                        <option value="<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>"
+                                            <?php echo $security_question === $key ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <?php if (isset($errors['security_question'])): ?>
+                                    <div class="invalid-feedback">
+                                        <?php echo htmlspecialchars($errors['security_question'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="security_answer" class="form-label">Security Answer</label>
+                                <input type="text"
+                                       class="form-control <?php echo isset($errors['security_answer']) ? 'is-invalid' : ''; ?>"
+                                       id="security_answer" name="security_answer"
+                                       value="<?php echo htmlspecialchars($security_answer, ENT_QUOTES, 'UTF-8'); ?>"
+                                       autocomplete="off" required>
+                                <?php if (isset($errors['security_answer'])): ?>
+                                    <div class="invalid-feedback">
+                                        <?php echo htmlspecialchars($errors['security_answer'], ENT_QUOTES, 'UTF-8'); ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
