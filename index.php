@@ -1,11 +1,7 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth.php';
 
-// Authentication check
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
+hs_require_patient();
 
 $firstName = $_SESSION['user_first_name'] ?? '';
 $lastName = $_SESSION['user_last_name'] ?? '';

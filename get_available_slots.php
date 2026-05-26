@@ -1,10 +1,11 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/db_connection.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-if (!isset($_SESSION['user_id'])) {
+hs_start_session();
+if (!hs_is_logged_in() || hs_current_role() !== 'patient') {
     http_response_code(401);
     echo json_encode([]);
     exit;

@@ -1,12 +1,8 @@
 <?php
-session_start();
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/db_connection.php';
 
-// Authentication check
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
+hs_require_patient();
 
 $patientId = (int)$_SESSION['user_id'];
 

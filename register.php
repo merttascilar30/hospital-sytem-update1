@@ -137,13 +137,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-light">
-<div class="container py-5">
+<body class="bg-light auth-page">
+<div class="container py-4 py-md-5">
     <div class="row justify-content-center">
         <div class="col-lg-8 col-xl-7">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
+            <div class="card shadow-sm auth-card">
+                <div class="card-header bg-primary text-white text-center">
                     <h4 class="mb-0">Patient Registration</h4>
+                    <p class="mb-0 small auth-card-subtitle">Create a patient account only</p>
                 </div>
                 <div class="card-body">
                     <?php if (!empty($errors['general'])): ?>
@@ -308,7 +309,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <button type="submit" class="btn btn-primary">
                                     Register
                                 </button>
-                                <a href="login.php" class="btn btn-link">Already have an account? Login</a>
+                                <a href="login.php?role=patient" class="btn btn-link">Already have an account? Login</a>
                             </div>
                         </div>
                     </form>
