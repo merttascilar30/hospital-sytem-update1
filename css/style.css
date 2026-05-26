@@ -79,56 +79,23 @@
         font-size: 1.1rem;
     }
 }
-
-/* Landing page */
-.landing-hero {
-    padding-top: 3.5rem;
-    padding-bottom: 1.5rem;
-}
-
-.landing-hero-image {
-    border-radius: 1.25rem;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.12);
-}
-
+/* --- YENI VITRIN (LANDING PAGE) TASARIMI --- */
 .feature-card {
-    background: #fff;
-    border: 1px solid rgba(13, 110, 253, 0.12);
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05) !important;
 }
-
 .feature-card:hover {
-    transform: translateY(-6px);
-    border-color: rgba(13, 110, 253, 0.35);
-    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.14);
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.1) !important;
 }
-
-.feature-card-icon {
-    width: 56px;
-    height: 56px;
-    border-radius: 999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(13, 110, 253, 0.1);
-    color: var(--bs-primary);
-    font-size: 1.6rem;
+.hero-img {
+    object-fit: cover;
+    height: 500px;
+    width: 100%;
 }
-
-.landing-about-gradient {
-    background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
-    color: #fff;
+.about-section {
+    background: linear-gradient(135deg, #4b10a9 0%, #0093E9 100%);
 }
-
-.landing-about-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 1rem;
-    background-color: rgba(255, 255, 255, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: auto;
-    margin-right: auto;
-    font-size: 1.6rem;
+.text-danger {
+    color: #0d6efd !important;
 }

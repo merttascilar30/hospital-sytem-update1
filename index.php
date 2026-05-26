@@ -1,93 +1,69 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Çukurova Hospital - Health Services</title>
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çukurova Hospital</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top">
-    <div class="container">
-        <a class="navbar-brand fw-semibold" href="#home">Çukurova Hospital</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="#home">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#about">About Us</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#contact">Contact</a>
-                </li>
-                <li class="nav-item">
-                    <a class="btn btn-light fw-semibold ms-lg-2" href="login.php">Login</a>
-                </li>
-            </ul>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="index.php">
+                <i class="fa-solid fa-hospital-user me-2"></i>Çukurova Hospital
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav align-items-center gap-3">
+                    <li class="nav-item"><a class="nav-link fw-semibold" href="#home">Home</a></li>
+                    <li class="nav-item"><a class="nav-link fw-semibold" href="#about">About Us</a></li>
+                    <li class="nav-item"><a class="nav-link fw-semibold" href="#contact">Contact</a></li>
+                    <li class="nav-item ms-lg-3">
+                        <a href="login.php" class="btn btn-primary px-4 rounded-pill fw-bold shadow-sm">Login</a>
+                    </li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-<main>
-    <section id="home" class="landing-hero">
+    <section id="home" class="py-5 bg-light">
         <div class="container py-5">
             <div class="row align-items-center g-5">
-                <div class="col-lg-6">
-                    <img class="landing-hero-image img-fluid"
-                         src="https://via.placeholder.com/640x520.png?text=Doctor+Image"
-                         alt="Doctor placeholder image"
-                         loading="lazy">
+                <div class="col-lg-5 text-center text-lg-start">
+                    <img src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=600&q=80" alt="Expert Doctor" class="img-fluid rounded-4 shadow-lg hero-img">
                 </div>
-
-                <div class="col-lg-6">
-                    <h1 class="display-5 fw-bold mb-3">The Best For Your Health</h1>
-                    <p class="lead text-muted mb-4">We are with you with our modern equipment and expert staff.</p>
-
+                <div class="col-lg-7">
+                    <h1 class="display-4 fw-bold text-dark mb-4">The Best For Your Health</h1>
+                    <p class="lead text-muted mb-5">We are with you with our modern equipment and expert staff.</p>
+                    
                     <div class="row g-4">
-                        <div class="col-12 col-md-6">
-                            <div class="feature-card rounded-4 p-4 h-100 text-center">
-                                <div class="feature-card-icon mx-auto mb-3">
-                                    <i class="fa-solid fa-user-doctor"></i>
-                                </div>
-                                <h3 class="h5 mb-0">Patient-Oriented Approach</h3>
+                        <div class="col-md-6">
+                            <div class="feature-card card h-100 border-0 shadow-sm p-4 rounded-4 text-center">
+                                <i class="fa-solid fa-user-doctor text-danger fs-1 mb-3"></i>
+                                <h5 class="fw-bold text-danger">Patient-Oriented Approach</h5>
                             </div>
                         </div>
-
-                        <div class="col-12 col-md-6">
-                            <div class="feature-card rounded-4 p-4 h-100 text-center">
-                                <div class="feature-card-icon mx-auto mb-3">
-                                    <i class="fa-solid fa-certificate"></i>
-                                </div>
-                                <h3 class="h5 mb-0">Strong References</h3>
+                        <div class="col-md-6">
+                            <div class="feature-card card h-100 border-0 shadow-sm p-4 rounded-4 text-center">
+                                <i class="fa-solid fa-book-open text-danger fs-1 mb-3"></i>
+                                <h5 class="fw-bold text-danger">Strong References</h5>
                             </div>
                         </div>
-
-                        <div class="col-12 col-md-6">
-                            <div class="feature-card rounded-4 p-4 h-100 text-center">
-                                <div class="feature-card-icon mx-auto mb-3">
-                                    <i class="fa-solid fa-shield-heart"></i>
-                                </div>
-                                <h3 class="h5 mb-0">Reliability</h3>
+                        <div class="col-md-6">
+                            <div class="feature-card card h-100 border-0 shadow-sm p-4 rounded-4 text-center">
+                                <i class="fa-solid fa-shield-halved text-danger fs-1 mb-3"></i>
+                                <h5 class="fw-bold text-danger">Reliability</h5>
                             </div>
                         </div>
-
-                        <div class="col-12 col-md-6">
-                            <div class="feature-card rounded-4 p-4 h-100 text-center">
-                                <div class="feature-card-icon mx-auto mb-3">
-                                    <i class="fa-solid fa-stethoscope"></i>
-                                </div>
-                                <h3 class="h5 mb-0">Expert Staff</h3>
+                        <div class="col-md-6">
+                            <div class="feature-card card h-100 border-0 shadow-sm p-4 rounded-4 text-center">
+                                <i class="fa-solid fa-users text-danger fs-1 mb-3"></i>
+                                <h5 class="fw-bold text-danger">Expert Staff</h5>
                             </div>
                         </div>
                     </div>
@@ -96,405 +72,67 @@
         </div>
     </section>
 
-    <section id="about" class="landing-about-gradient py-5">
-        <div class="container">
-            <div class="text-center mb-5">
-                <h2 class="fw-bold text-white mb-2">About Us</h2>
-                <p class="text-white-50 mb-0">A patient-first hospital experience with modern care and transparent communication.</p>
-            </div>
-
-            <div class="row g-4 text-center">
-                <div class="col-12 col-md-4">
-                    <div class="p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-25 h-100">
-                        <div class="landing-about-icon mb-3">
-                            <i class="fa-solid fa-calendar-check"></i>
-                        </div>
-                        <h3 class="h5 text-white">Make an appointment</h3>
-                        <p class="text-white-50 mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Book your visit in a few clicks.</p>
-                    </div>
+    <section id="about" class="about-section py-5 text-white">
+        <div class="container py-5 text-center">
+            <h2 class="display-6 fw-bold mb-5">Why Choose Us?</h2>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <i class="fa-solid fa-calendar-check fs-1 mb-3"></i>
+                    <h4 class="fw-semibold">Make an appointment</h4>
+                    <p class="small opacity-75">Easily schedule your visit using our modern appointment system.</p>
                 </div>
-
-                <div class="col-12 col-md-4">
-                    <div class="p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-25 h-100">
-                        <div class="landing-about-icon mb-3">
-                            <i class="fa-solid fa-hand-holding-medical"></i>
-                        </div>
-                        <h3 class="h5 text-white">Help by specialist</h3>
-                        <p class="text-white-50 mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Get expert support tailored to you.</p>
-                    </div>
+                <div class="col-md-4">
+                    <i class="fa-solid fa-user-nurse fs-1 mb-3"></i>
+                    <h4 class="fw-semibold">Help by specialist</h4>
+                    <p class="small opacity-75">Get treated by industry-leading doctors and specialists.</p>
                 </div>
-
-                <div class="col-12 col-md-4">
-                    <div class="p-4 rounded-4 bg-white bg-opacity-10 border border-white border-opacity-25 h-100">
-                        <div class="landing-about-icon mb-3">
-                            <i class="fa-solid fa-file-medical"></i>
-                        </div>
-                        <h3 class="h5 text-white">Get diagnostic report</h3>
-                        <p class="text-white-50 mb-0">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Receive clear results and next steps.</p>
-                    </div>
+                <div class="col-md-4">
+                    <i class="fa-solid fa-file-medical fs-1 mb-3"></i>
+                    <h4 class="fw-semibold">Get diagnostic report</h4>
+                    <p class="small opacity-75">Access your medical history and test reports seamlessly.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <section id="contact" class="py-5">
-        <div class="container">
-            <div class="text-center mb-4">
-                <h2 class="fw-bold">Contact</h2>
-                <p class="text-muted mb-0">Send us your message and we will get back to you.</p>
-            </div>
-
+        <div class="container py-5">
             <div class="row justify-content-center">
                 <div class="col-lg-8">
-                    <div class="card shadow-sm border-0 rounded-4">
-                        <div class="card-body p-4 p-md-5">
-                            <form method="post" action="#">
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label for="first_name" class="form-label">First Name</label>
-                                        <input type="text" class="form-control" id="first_name" name="first_name" required>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label for="last_name" class="form-label">Last Name</label>
-                                        <input type="text" class="form-control" id="last_name" name="last_name" required>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label for="email" class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="email" name="email" required>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label for="message" class="form-label">Message</label>
-                                        <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
-                                    </div>
-
-                                    <div class="col-12 d-flex justify-content-end pt-2">
-                                        <button type="submit" class="btn btn-primary btn-lg">Send Message</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+                    <div class="text-center mb-5">
+                        <h2 class="fw-bold">Contact Us</h2>
+                        <p class="text-muted">Send us your message and we will get back to you.</p>
                     </div>
-                    <div class="text-center text-muted small mt-3">
-                        This form is a front-end demo; backend handling is not included.
+                    <div class="card border-0 shadow-lg p-4 rounded-4">
+                        <form action="#" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">First Name</label>
+                                    <input type="text" class="form-control bg-light" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Last Name</label>
+                                    <input type="text" class="form-control bg-light" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" class="form-control bg-light" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Message</label>
+                                    <textarea class="form-control bg-light" rows="4" required></textarea>
+                                </div>
+                                <div class="col-12 text-center mt-4">
+                                    <button type="submit" class="btn btn-primary px-5 py-2 rounded-pill fw-bold">Send Message</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <footer class="py-4 border-top text-center text-muted">
-        <div class="container">
-            © <?php echo date('Y'); ?> Çukurova Hospital. All rights reserved.
-        </div>
-    </footer>
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-<?php
-require_once __DIR__ . '/includes/auth.php';
-
-hs_require_patient();
-
-$firstName = $_SESSION['user_first_name'] ?? '';
-$lastName = $_SESSION['user_last_name'] ?? '';
-$patientId = (int)$_SESSION['user_id'];
-
-require_once __DIR__ . '/includes/db_connection.php';
-
-// Optional status message from redirects
-$statusMessage = null;
-if (isset($_GET['status']) && $_GET['status'] === 'success') {
-    $statusMessage = 'Appointment processed successfully!';
-}
-
-// Total appointments for this patient via stored procedure
-$totalAppointments = 0;
-$patientIdForCall = (int)$patientId;
-$spStmt = $mysqli->prepare('CALL sp_get_patient_appointment_count(?)');
-if ($spStmt) {
-    $spStmt->bind_param('i', $patientIdForCall);
-    if ($spStmt->execute()) {
-        $result = $spStmt->get_result();
-        if ($result) {
-            $row = $result->fetch_assoc();
-            if ($row && isset($row['total_appointments'])) {
-                $totalAppointments = (int)$row['total_appointments'];
-            }
-            $result->free();
-        }
-    }
-    $spStmt->close();
-    // Advance to next result set if any, to avoid "commands out of sync"
-    while ($mysqli->more_results() && $mysqli->next_result()) {
-        $extraResult = $mysqli->use_result();
-        if ($extraResult instanceof mysqli_result) {
-            $extraResult->free();
-        }
-    }
-}
-
-// Upcoming appointments for this patient
-$appointments = [];
-$upcomingStmt = $mysqli->prepare(
-    "SELECT
-        a.appointment_id,
-        a.appointment_datetime,
-        a.status,
-        a.notes,
-        d.first_name AS doctor_first_name,
-        d.last_name  AS doctor_last_name,
-        dep.name     AS department_name
-     FROM appointments a
-     INNER JOIN doctors d ON d.doctor_id = a.doctor_id
-     INNER JOIN departments dep ON dep.department_id = d.department_id
-     WHERE a.patient_id = ?
-       AND a.appointment_datetime >= NOW()
-     ORDER BY a.appointment_datetime ASC"
-);
-
-if ($upcomingStmt) {
-    $upcomingStmt->bind_param('i', $patientId);
-    $upcomingStmt->execute();
-    $result = $upcomingStmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $appointments[] = $row;
-    }
-    $result->free();
-    $upcomingStmt->close();
-}
-
-// Past appointment history
-$pastAppointments = [];
-$pastStmt = $mysqli->prepare(
-    "SELECT
-        a.appointment_id,
-        a.appointment_datetime,
-        a.status,
-        d.first_name AS doctor_first_name,
-        d.last_name  AS doctor_last_name,
-        dep.name     AS department_name
-     FROM appointments a
-     INNER JOIN doctors d ON d.doctor_id = a.doctor_id
-     INNER JOIN departments dep ON dep.department_id = d.department_id
-     WHERE a.patient_id = ?
-       AND a.appointment_datetime < NOW()
-     ORDER BY a.appointment_datetime DESC"
-);
-
-if ($pastStmt) {
-    $pastStmt->bind_param('i', $patientId);
-    $pastStmt->execute();
-    $result = $pastStmt->get_result();
-    while ($row = $result->fetch_assoc()) {
-        $pastAppointments[] = $row;
-    }
-    $result->free();
-    $pastStmt->close();
-}
-?>
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Dashboard - Hospital Appointment System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-    <div class="container">
-        <a class="navbar-brand" href="index.php">Hospital Appointment System</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="logout.php">Logout</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-<div class="container py-5">
-    <?php if ($statusMessage): ?>
-        <div class="row mb-3">
-            <div class="col-12">
-                <div class="alert alert-success">
-                    <?php echo htmlspecialchars($statusMessage, ENT_QUOTES, 'UTF-8'); ?>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
-    <div class="row g-4">
-        <div class="col-12 col-lg-4">
-            <div class="card shadow-sm h-100">
-                <div class="card-body d-flex flex-column">
-                    <h1 class="h4 mb-3">
-                        Welcome,
-                        <?php echo htmlspecialchars(trim($firstName . ' ' . $lastName), ENT_QUOTES, 'UTF-8'); ?>!
-                    </h1>
-                    <p class="text-muted flex-grow-1">
-                        From this dashboard you can view, book, edit, and cancel your hospital appointments.
-                    </p>
-                    <a href="book_appointment.php" class="btn btn-primary mt-2">
-                        Book New Appointment
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12 col-lg-8">
-            <div class="card shadow-sm h-100">
-                <div class="card-body">
-                    <div class="row align-items-center mb-3 g-3">
-                        <div class="col-12 col-md-6">
-                            <h2 class="h5 mb-0">Upcoming Appointments</h2>
-                        </div>
-                        <div class="col-12 col-md-6 text-md-end">
-                            <div class="card border-0 bg-light d-inline-block">
-                                <div class="card-body py-2 px-3">
-                                    <div class="text-muted small">Total Appointments</div>
-                                    <div class="h4 mb-0">
-                                        <?php echo htmlspecialchars((string)$totalAppointments, ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <?php if (empty($appointments)): ?>
-                        <p class="text-muted mb-0">
-                            You do not have any upcoming appointments.
-                        </p>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-striped align-middle mb-0">
-                                <thead>
-                                <tr>
-                                    <th scope="col">Date &amp; Time</th>
-                                    <th scope="col">Department</th>
-                                    <th scope="col">Doctor</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Notes</th>
-                                    <th scope="col" class="text-end">Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <?php foreach ($appointments as $appointment): ?>
-                                    <tr>
-                                        <td>
-                                            <?php
-                                            $dt = DateTime::createFromFormat('Y-m-d H:i:s', $appointment['appointment_datetime']);
-                                            echo $dt ? htmlspecialchars($dt->format('d.m.Y H:i'), ENT_QUOTES, 'UTF-8') : htmlspecialchars($appointment['appointment_datetime'], ENT_QUOTES, 'UTF-8');
-                                            ?>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($appointment['department_name'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td><?php echo htmlspecialchars($appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td>
-                                            <span class="badge bg-secondary text-capitalize">
-                                                <?php echo htmlspecialchars($appointment['status'], ENT_QUOTES, 'UTF-8'); ?>
-                                            </span>
-                                        </td>
-                                        <td class="table-notes-cell">
-                                            <small class="text-muted d-block text-truncate" title="<?php echo htmlspecialchars($appointment['notes'], ENT_QUOTES, 'UTF-8'); ?>">
-                                                <?php echo htmlspecialchars($appointment['notes'], ENT_QUOTES, 'UTF-8'); ?>
-                                            </small>
-                                        </td>
-                                        <td class="text-end">
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <a href="edit_appointment.php?id=<?php echo (int)$appointment['appointment_id']; ?>"
-                                                   class="btn btn-outline-primary">
-                                                    Edit
-                                                </a>
-                                                <form action="actions/cancel_appointment.php" method="post" class="d-inline"
-                                                      data-confirm="Are you sure you want to cancel this appointment?">
-                                                    <input type="hidden" name="appointment_id"
-                                                           value="<?php echo (int)$appointment['appointment_id']; ?>">
-                                                    <button type="submit" class="btn btn-outline-danger">
-                                                        Cancel
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h2 class="h5 mb-3">Appointment History</h2>
-                    <?php if (empty($pastAppointments)): ?>
-                        <p class="text-muted mb-0">No past appointments.</p>
-                    <?php else: ?>
-                        <div class="table-responsive">
-                            <table class="table table-striped align-middle mb-0">
-                                <thead>
-                                <tr>
-                                    <th scope="col">Date &amp; Time</th>
-                                    <th scope="col">Doctor</th>
-                                    <th scope="col">Polyclinic</th>
-                                    <th scope="col">Status</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <?php foreach ($pastAppointments as $appointment): ?>
-                                    <tr>
-                                        <td>
-                                            <?php
-                                            $dt = DateTime::createFromFormat('Y-m-d H:i:s', $appointment['appointment_datetime']);
-                                            echo $dt
-                                                ? htmlspecialchars($dt->format('d.m.Y H:i'), ENT_QUOTES, 'UTF-8')
-                                                : htmlspecialchars($appointment['appointment_datetime'], ENT_QUOTES, 'UTF-8');
-                                            ?>
-                                        </td>
-                                        <td><?php echo htmlspecialchars(
-                                            $appointment['doctor_first_name'] . ' ' . $appointment['doctor_last_name'],
-                                            ENT_QUOTES,
-                                            'UTF-8'
-                                        ); ?></td>
-                                        <td><?php echo htmlspecialchars($appointment['department_name'], ENT_QUOTES, 'UTF-8'); ?></td>
-                                        <td>
-                                            <span class="badge bg-secondary text-capitalize">
-                                                <?php echo htmlspecialchars($appointment['status'], ENT_QUOTES, 'UTF-8'); ?>
-                                            </span>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-<script src="js/script.js"></script>
-</body>
-</html>
-

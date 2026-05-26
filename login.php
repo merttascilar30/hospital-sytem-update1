@@ -126,9 +126,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Login - Hospital Appointment System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
           integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-light auth-page">
+
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3 mb-5">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="index.php">
+            <i class="fa-solid fa-hospital-user me-2"></i>Çukurova Hospital
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+            <ul class="navbar-nav align-items-center gap-3">
+                <li class="nav-item"><a class="nav-link fw-semibold" href="index.php#home">Home</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold" href="index.php#about">About Us</a></li>
+                <li class="nav-item"><a class="nav-link fw-semibold" href="index.php#contact">Contact</a></li>
+                <li class="nav-item ms-lg-3">
+                    <a href="login.php" class="btn btn-primary px-4 rounded-pill fw-bold shadow-sm">Login</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
 <div class="container py-4 py-md-5">
     <div class="row justify-content-center">
         <div class="col-md-10 col-lg-8 col-xl-6">
@@ -138,6 +161,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <p class="mb-0 small auth-card-subtitle">Sign in to your account</p>
                 </div>
                 <div class="card-body p-3 p-md-4">
+            
                     <?php if (!empty($errors['general'])): ?>
                         <div class="alert alert-danger">
                             <?php echo htmlspecialchars($errors['general'], ENT_QUOTES, 'UTF-8'); ?>
@@ -153,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button type="button" class="nav-link <?php echo $role === 'doctor' ? 'active' : ''; ?>"
+                             <button type="button" class="nav-link <?php echo $role === 'doctor' ? 'active' : ''; ?>"
                                     data-login-role="doctor" role="tab"
                                     aria-selected="<?php echo $role === 'doctor' ? 'true' : 'false'; ?>">
                                 Doctor
@@ -166,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 Admin
                             </button>
                         </li>
-                    </ul>
+                     </ul>
 
                     <form method="post" novalidate id="loginForm">
                         <input type="hidden" name="role" id="login_role" value="<?php echo htmlspecialchars($role, ENT_QUOTES, 'UTF-8'); ?>">
@@ -210,7 +234,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                        class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>"
                                        id="password" name="password" required
                                        autocomplete="current-password">
-                                <button class="btn btn-outline-secondary" type="button"
+                                 <button class="btn btn-outline-secondary" type="button"
                                         data-password-toggle="password"
                                         data-label-show="Show" data-label-hide="Hide"
                                         aria-pressed="false" aria-controls="password">
@@ -229,13 +253,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">Login</button>
+                             <button type="submit" class="btn btn-primary btn-lg">Login</button>
                         </div>
                     </form>
 
                     <hr class="my-4">
 
-                    <div id="patient-register-prompt" class="text-center <?php echo $role !== 'patient' ? 'd-none' : ''; ?>">
+                     <div id="patient-register-prompt" class="text-center <?php echo $role !== 'patient' ? 'd-none' : ''; ?>">
                         <p class="text-muted mb-2">New patient?</p>
                         <a href="register.php" class="btn btn-outline-primary">Create Patient Account</a>
                     </div>
