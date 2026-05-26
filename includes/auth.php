@@ -37,7 +37,7 @@ function hs_redirect_if_logged_in(): void
             header('Location: doctor/index.php');
             break;
         default:
-            header('Location: index.php');
+            header('Location: patient_dashboard.php');
     }
     exit;
 }

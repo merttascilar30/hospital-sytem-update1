@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'user_last_name' => $user['last_name'],
                         'user_email' => $user['email'],
                     ]);
-                    header('Location: index.php');
+                    header('Location: patient_dashboard.php');
                     exit;
                 }
                 $errors['general'] = 'Invalid email or password.';

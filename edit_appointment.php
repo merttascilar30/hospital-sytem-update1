@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
 
             if ($stmt->execute()) {
                 // Successful update: redirect to dashboard with success status
-                header('Location: index.php?status=success');
+                header('Location: patient_dashboard.php?status=success');
                 exit;
             } else {
                 if ($mysqli->errno === 1062) {
@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
 <body class="bg-light">
 <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
     <div class="container">
-        <a class="navbar-brand" href="index.php">Hospital Appointment System</a>
+        <a class="navbar-brand" href="patient_dashboard.php">Hospital Appointment System</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="index.php">Dashboard</a>
+                    <a class="nav-link" href="patient_dashboard.php">Dashboard</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="logout.php">Logout</a>
@@ -233,11 +233,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($errors)) {
                                 <button type="submit" class="btn btn-primary">
                                     Save Changes
                                 </button>
-                                <a href="index.php" class="btn btn-link">Back to Dashboard</a>
+                                <a href="patient_dashboard.php" class="btn btn-link">Back to Dashboard</a>
                             </div>
                         </form>
                     <?php else: ?>
-                        <a href="index.php" class="btn btn-primary">Back to Dashboard</a>
+                        <a href="patient_dashboard.php" class="btn btn-primary">Back to Dashboard</a>
                     <?php endif; ?>
                 </div>
             </div>
