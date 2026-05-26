@@ -88,8 +88,12 @@ if (isset($_GET['status'])) {
     } elseif ($_GET['status'] === 'delete_failed') {
         $statusMessage = 'Could not delete doctor. They may still have linked appointments.';
         $statusAlertClass = 'warning';
+    } elseif ($_GET['status'] === 'password_reset') {
+        $statusMessage = 'Doctor password updated successfully.';
     }
 }
+
+$adminNavActive = 'dashboard';
 ?>
 <!doctype html>
 <html lang="en">
@@ -102,28 +106,7 @@ if (isset($_GET['status'])) {
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="index.php">Admin Panel</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav"
-                aria-controls="adminNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="adminNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link active" href="index.php">Dashboard</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="add_doctor.php">Add Doctor</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="../logout.php">Logout</a>
-                </li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<?php require __DIR__ . '/includes_nav.php'; ?>
 
 <div class="container py-4 py-md-5">
     <?php if ($statusMessage): ?>
@@ -134,8 +117,7 @@ if (isset($_GET['status'])) {
 
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
         <div>
-            <h1 class="h3 mb-1">Welcome, <?php echo htmlspecialchars($adminName, ENT_QUOTES, 'UTF-8'); ?></h1>
-            <p class="text-muted mb-0">System overview (via stored procedure <code>sp_admin_dashboard_stats</code>)</p>
+            <h1 class="h3 mb-0">Welcome, <?php echo htmlspecialchars($adminName, ENT_QUOTES, 'UTF-8'); ?></h1>
         </div>
         <a href="add_doctor.php" class="btn btn-primary">Add New Doctor</a>
     </div>
@@ -188,7 +170,7 @@ if (isset($_GET['status'])) {
         <div class="col-12 col-xl-8">
             <div class="card shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h2 class="h6 mb-0">Doctors (INNER JOIN with Polyclinic)</h2>
+                    <h2 class="h6 mb-0">Doctors</h2>
                 </div>
                 <div class="card-body p-0">
                     <?php if (empty($doctors)): ?>
@@ -224,11 +206,15 @@ if (isset($_GET['status'])) {
                                         <td><?php echo htmlspecialchars($doc['polyclinic_name'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td><?php echo htmlspecialchars($doc['email'], ENT_QUOTES, 'UTF-8'); ?></td>
                                         <td class="text-end">
-                                            <form method="post" action="delete_doctor.php" class="d-inline"
-                                                  data-confirm="Delete this doctor? Existing appointments may block deletion.">
-                                                <input type="hidden" name="doctor_id" value="<?php echo (int)$doc['doctor_id']; ?>">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                            </form>
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="reset_password.php?doctor_id=<?php echo (int)$doc['doctor_id']; ?>"
+                                                   class="btn btn-outline-secondary">Reset Password</a>
+                                                <form method="post" action="delete_doctor.php" class="d-inline"
+                                                      data-confirm="Delete this doctor? Existing appointments may block deletion.">
+                                                    <input type="hidden" name="doctor_id" value="<?php echo (int)$doc['doctor_id']; ?>">
+                                                    <button type="submit" class="btn btn-outline-danger">Delete</button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -243,7 +229,7 @@ if (isset($_GET['status'])) {
         <div class="col-12 col-xl-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header bg-white">
-                    <h2 class="h6 mb-0">Recent System Logs (Trigger)</h2>
+                    <h2 class="h6 mb-0">Recent System Logs</h2>
                 </div>
                 <div class="card-body">
                     <?php if (empty($recentLogs)): ?>

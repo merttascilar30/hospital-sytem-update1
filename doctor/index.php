@@ -12,7 +12,6 @@ if ($doctorId <= 0) {
 
 $firstName = $_SESSION['user_first_name'] ?? '';
 $lastName = $_SESSION['user_last_name'] ?? '';
-$username = $_SESSION['user_username'] ?? '';
 
 $appointments = [];
 $upcomingCount = 0;
@@ -117,13 +116,9 @@ if ($pastStmt) {
         <div class="col-12">
             <div class="card shadow-sm">
                 <div class="card-body">
-                    <h1 class="h4 mb-1">
+                    <h1 class="h4 mb-0">
                         Welcome, Dr. <?php echo htmlspecialchars(trim($firstName . ' ' . $lastName), ENT_QUOTES, 'UTF-8'); ?>
                     </h1>
-                    <p class="text-muted mb-0">
-                        Logged in as <strong><?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?></strong>
-                        (Doctor ID: <?php echo (int)$doctorId; ?>)
-                    </p>
                 </div>
             </div>
         </div>
@@ -136,10 +131,7 @@ if ($pastStmt) {
         </div>
         <div class="card-body p-0">
             <?php if (empty($appointments)): ?>
-                <p class="text-muted p-3 mb-0">
-                    No upcoming appointments found for your account. Bookings made by patients for your
-                    <code>doctor_id</code> will appear here when the date/time is in the future.
-                </p>
+                <p class="text-muted p-3 mb-0">No upcoming appointments.</p>
             <?php else: ?>
                 <div class="table-responsive">
                     <table class="table table-striped align-middle mb-0">

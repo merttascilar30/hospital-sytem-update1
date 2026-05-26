@@ -154,6 +154,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         hs_clear_admin_context($mysqli);
     }
 }
+
+$adminNavActive = 'add_doctor';
 ?>
 <!doctype html>
 <html lang="en">
@@ -166,22 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="../css/style.css">
 </head>
 <body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="index.php">Admin Panel</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNav"
-                aria-controls="adminNav" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="adminNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="index.php">Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link active" href="add_doctor.php">Add Doctor</a></li>
-                <li class="nav-item"><a class="nav-link" href="../logout.php">Logout</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+<?php require __DIR__ . '/includes_nav.php'; ?>
 
 <div class="container py-4 py-md-5">
     <div class="row justify-content-center">
@@ -189,9 +176,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card shadow-sm">
                 <div class="card-header bg-white">
                     <h1 class="h4 mb-0">Add Doctor Account</h1>
-                    <p class="text-muted small mb-0 mt-1">
-                        Form uses text, dropdown, radio, checkbox, file, password, and textarea elements — processed via PHP POST.
-                    </p>
                 </div>
                 <div class="card-body">
                     <?php if (!empty($errors['general'])): ?>
@@ -201,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <form method="post" enctype="multipart/form-data" novalidate>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="first_name" class="form-label">First Name (text)</label>
+                                <label for="first_name" class="form-label">First Name</label>
                                 <input type="text" class="form-control <?php echo isset($errors['first_name']) ? 'is-invalid' : ''; ?>"
                                        id="first_name" name="first_name"
                                        value="<?php echo htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8'); ?>" required>
@@ -210,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?php endif; ?>
                             </div>
                             <div class="col-md-6">
-                                <label for="last_name" class="form-label">Last Name (text)</label>
+                                <label for="last_name" class="form-label">Last Name</label>
                                 <input type="text" class="form-control <?php echo isset($errors['last_name']) ? 'is-invalid' : ''; ?>"
                                        id="last_name" name="last_name"
                                        value="<?php echo htmlspecialchars($last_name, ENT_QUOTES, 'UTF-8'); ?>" required>
@@ -220,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="col-md-6">
-                                <label for="email" class="form-label">Email (text)</label>
+                                <label for="email" class="form-label">Email</label>
                                 <input type="email" class="form-control <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>"
                                        id="email" name="email"
                                        value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" required>
@@ -229,7 +213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?php endif; ?>
                             </div>
                             <div class="col-md-6">
-                                <label for="phone" class="form-label">Phone (text)</label>
+                                <label for="phone" class="form-label">Phone</label>
                                 <input type="text" class="form-control <?php echo isset($errors['phone']) ? 'is-invalid' : ''; ?>"
                                        id="phone" name="phone"
                                        value="<?php echo htmlspecialchars($phone, ENT_QUOTES, 'UTF-8'); ?>">
@@ -239,7 +223,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="col-md-6">
-                                <label for="department_id" class="form-label">Polyclinic (drop-down)</label>
+                                <label for="department_id" class="form-label">Polyclinic</label>
                                 <select class="form-select <?php echo isset($errors['department_id']) ? 'is-invalid' : ''; ?>"
                                         id="department_id" name="department_id" required>
                                     <option value="">Choose polyclinic...</option>
@@ -256,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label d-block">Gender (radio buttons)</label>
+                                <label class="form-label d-block">Gender</label>
                                 <?php foreach (['M' => 'Male', 'F' => 'Female', 'Other' => 'Other'] as $val => $label): ?>
                                     <div class="form-check form-check-inline">
                                         <input class="form-check-input" type="radio" name="gender"
@@ -274,7 +258,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="col-md-6">
-                                <label for="username" class="form-label">Login Username (text)</label>
+                                <label for="username" class="form-label">Login Username</label>
                                 <input type="text" class="form-control <?php echo isset($errors['username']) ? 'is-invalid' : ''; ?>"
                                        id="username" name="username"
                                        value="<?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>" required>
@@ -284,7 +268,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="col-md-6">
-                                <label for="profile_picture" class="form-label">Profile Picture (file)</label>
+                                <label for="profile_picture" class="form-label">Profile Picture</label>
                                 <input type="file" class="form-control <?php echo isset($errors['profile_picture']) ? 'is-invalid' : ''; ?>"
                                        id="profile_picture" name="profile_picture" accept="image/jpeg,image/png,image/webp">
                                 <?php if (isset($errors['profile_picture'])): ?>
@@ -293,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="col-md-6">
-                                <label for="password" class="form-label">Password (password)</label>
+                                <label for="password" class="form-label">Password</label>
                                 <input type="password" class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>"
                                        id="password" name="password" required>
                                 <?php if (isset($errors['password'])): ?>
@@ -301,7 +285,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <?php endif; ?>
                             </div>
                             <div class="col-md-6">
-                                <label for="confirm_password" class="form-label">Confirm Password (password)</label>
+                                <label for="confirm_password" class="form-label">Confirm Password</label>
                                 <input type="password" class="form-control <?php echo isset($errors['confirm_password']) ? 'is-invalid' : ''; ?>"
                                        id="confirm_password" name="confirm_password" required>
                                 <?php if (isset($errors['confirm_password'])): ?>
@@ -314,13 +298,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     <input class="form-check-input" type="checkbox" id="is_active" name="is_active" value="1"
                                         <?php echo $is_active ? 'checked' : ''; ?>>
                                     <label class="form-check-label" for="is_active">
-                                        Account is active (checkbox)
+                                        Account is active
                                     </label>
                                 </div>
                             </div>
 
                             <div class="col-12">
-                                <label for="profile_notes" class="form-label">Internal Notes (textarea)</label>
+                                <label for="profile_notes" class="form-label">Internal Notes</label>
                                 <textarea class="form-control <?php echo isset($errors['profile_notes']) ? 'is-invalid' : ''; ?>"
                                           id="profile_notes" name="profile_notes" rows="3"><?php echo htmlspecialchars($profile_notes, ENT_QUOTES, 'UTF-8'); ?></textarea>
                                 <?php if (isset($errors['profile_notes'])): ?>
