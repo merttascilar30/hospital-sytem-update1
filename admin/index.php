@@ -11,29 +11,32 @@ $doctors = [];
 $recentLogs = [];
 
 $spStmt = $mysqli->prepare('CALL sp_admin_dashboard_stats()');
-if ($spStmt) {
-    if ($spStmt->execute()) {
+if ($spStmt && $spStmt->execute()) {
+    $resultSetIndex = 0;
+    do {
         $result = $spStmt->get_result();
-        if ($result) {
-            $summary = $result->fetch_assoc();
-            if ($summary && isset($summary['total_doctors'])) {
-                $totalDoctors = (int)$summary['total_doctors'];
+        if ($result instanceof mysqli_result) {
+            if ($resultSetIndex === 0) {
+                $summary = $result->fetch_assoc();
+                if ($summary && isset($summary['total_doctors'])) {
+                    $totalDoctors = (int)$summary['total_doctors'];
+                }
+            } else {
+                while ($row = $result->fetch_assoc()) {
+                    $polyclinicStats[] = $row;
+                }
             }
             $result->free();
+            $resultSetIndex++;
         }
-        $mysqli->next_result();
-        $result2 = $spStmt->get_result();
-        if ($result2) {
-            while ($row = $result2->fetch_assoc()) {
-                $polyclinicStats[] = $row;
-            }
-            $result2->free();
-        }
-    }
+    } while ($spStmt->more_results() && $spStmt->next_result());
+
     $spStmt->close();
-    while ($mysqli->more_results() && $mysqli->next_result()) {
-        $extra = $mysqli->use_result();
-        if ($extra instanceof mysqli_result) {
+
+    // Drain any leftover packets on the connection before regular queries.
+    while ($mysqli->more_results()) {
+        $mysqli->next_result();
+        if ($extra = $mysqli->store_result()) {
             $extra->free();
         }
     }
