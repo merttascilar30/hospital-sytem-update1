@@ -75,7 +75,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 if ($user && (int)$user['is_active'] === 1 && !empty($user['password_hash'])
                     && password_verify($password, $user['password_hash'])) {
-                    hs_login_user((int)$user['doctor_id'], 'doctor', [
+                    $doctorId = (int)$user['doctor_id'];
+                    hs_login_user($doctorId, 'doctor', [
+                        'doctor_id' => $doctorId,
                         'user_first_name' => $user['first_name'],
                         'user_last_name' => $user['last_name'],
                         'user_username' => $user['username'],
