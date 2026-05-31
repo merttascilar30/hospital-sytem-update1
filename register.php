@@ -1,152 +1,85 @@
 <?php
+require_once __DIR__ . '/includes/auth.php';
 require_once __DIR__ . '/includes/db_connection.php';
-require_once __DIR__ . '/includes/security_questions.php';
+
+hs_redirect_if_logged_in();
 
 $errors = [];
-$success = false;
-$securityQuestions = hs_security_questions();
-
-// Initialize form values
-$first_name = '';
-$last_name = '';
+$firstName = '';
+$lastName = '';
 $email = '';
 $phone = '';
-$birth_date = '';
 $gender = '';
-$security_question = '';
-$security_answer = '';
-$notes = '';
-$terms_accepted = false;
+$birthDate = '';
+$password = '';
+$confirmPassword = '';
+$securityQuestion = '';
+$securityAnswer = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Trim all incoming values
-    $first_name = trim($_POST['first_name'] ?? '');
-    $last_name = trim($_POST['last_name'] ?? '');
+    $firstName = trim($_POST['first_name'] ?? '');
+    $lastName = trim($_POST['last_name'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
-    $birth_date = trim($_POST['birth_date'] ?? '');
     $gender = $_POST['gender'] ?? '';
-    $notes = trim($_POST['notes'] ?? '');
-    $security_question = $_POST['security_question'] ?? '';
-    $security_answer = trim($_POST['security_answer'] ?? '');
+    $birthDate = $_POST['birth_date'] ?? '';
     $password = $_POST['password'] ?? '';
-    $confirm_password = $_POST['confirm_password'] ?? '';
-    $terms_accepted = isset($_POST['terms']);
+    $confirmPassword = $_POST['confirm_password'] ?? '';
+    $securityQuestion = $_POST['security_question'] ?? '';
+    $securityAnswer = trim($_POST['security_answer'] ?? '');
 
-    // Regular expressions
-    $namePattern = "/^[A-Za-zÇçĞğİıÖöŞşÜü\s'-]{2,}$/u";
-    $emailPattern = "/^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/";
-    $phonePattern = "/^[0-9+\-\s]{7,20}$/";
-    // At least 8 chars, one letter, one digit
-    $passwordPattern = "/^(?=.*[A-Za-z])(?=.*\d).{8,}$/";
-
-    // Validation
-    if ($first_name === '' || !preg_match($namePattern, $first_name)) {
-        $errors['first_name'] = 'Please enter a valid first name.';
+    // Form Doğrulamaları
+    if ($firstName === '') { $errors['first_name'] = 'First name is required.'; }
+    if ($lastName === '') { $errors['last_name'] = 'Last name is required.'; }
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) { $errors['email'] = 'Please enter a valid email address.'; }
+    if ($phone === '') { $errors['phone'] = 'Phone number is required.'; }
+    if ($gender === '') { $errors['gender'] = 'Please select your gender.'; }
+    if ($birthDate === '') { $errors['birth_date'] = 'Birth date is required.'; }
+    if (strlen($password) < 8 || !preg_match('/[A-Za-z]/', $password) || !preg_match('/\d/', $password)) {
+        $errors['password'] = 'Password must be at least 8 characters long and contain letters and numbers.';
     }
+    if ($password !== $confirmPassword) { $errors['confirm_password'] = 'Passwords do not match.'; }
+    if ($securityQuestion === '') { $errors['security_question'] = 'Please select a security question.'; }
+    if ($securityAnswer === '') { $errors['security_answer'] = 'Security answer is required.'; }
 
-    if ($last_name === '' || !preg_match($namePattern, $last_name)) {
-        $errors['last_name'] = 'Please enter a valid last name.';
-    }
-
-    if ($email === '' || !preg_match($emailPattern, $email)) {
-        $errors['email'] = 'Please enter a valid email address.';
-    }
-
-    if ($phone !== '' && !preg_match($phonePattern, $phone)) {
-        $errors['phone'] = 'Please enter a valid phone number.';
-    }
-
-    if ($birth_date !== '' && !preg_match("/^\d{4}-\d{2}-\d{2}$/", $birth_date)) {
-        $errors['birth_date'] = 'Please enter a valid birth date (YYYY-MM-DD).';
-    }
-
-    if (!in_array($gender, ['M', 'F', 'Other'], true)) {
-        $errors['gender'] = 'Please select a gender.';
-    }
-
-    if (!hs_is_valid_security_question($security_question)) {
-        $errors['security_question'] = 'Please select a security question.';
-    }
-
-    if ($security_answer === '' || !preg_match('/\A.{2,100}\z/us', $security_answer)) {
-        $errors['security_answer'] = 'Please enter a security answer (2–100 characters).';
-    }
-
-    if ($password === '' || !preg_match($passwordPattern, $password)) {
-        $errors['password'] = 'Password must be at least 8 characters and include at least one letter and one number.';
-    }
-
-    if ($confirm_password === '' || $confirm_password !== $password) {
-        $errors['confirm_password'] = 'Passwords do not match.';
-    }
-
-    if ($notes !== '' && !preg_match('/\A.{0,2000}\z/us', $notes)) {
-        $errors['notes'] = 'Notes must be at most 2000 characters.';
-    }
-
-    if (!$terms_accepted) {
-        $errors['terms'] = 'You must accept the terms and conditions.';
-    }
-
-    // If no validation errors, insert into database
+    // Çift E-posta Kayıt Engelleyicisi
     if (empty($errors)) {
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+        $checkEmailStmt = $mysqli->prepare("SELECT patient_id FROM patients WHERE email = ? LIMIT 1");
+        if ($checkEmailStmt) {
+            $checkEmailStmt->bind_param("s", $email);
+            $checkEmailStmt->execute();
+            $checkEmailStmt->store_result();
+            if ($checkEmailStmt->num_rows > 0) {
+                $errors['email'] = "This email address is already registered.";
+            }
+            $checkEmailStmt->close();
+        }
+    }
 
-        // Normalize nullable date for bind_param (must be a variable, not an expression)
-        $birth_date_param = $birth_date !== '' ? $birth_date : null;
-
-        $security_answer_hash = hs_hash_security_answer($security_answer);
+    // Veritabanına Kayıt
+    if (empty($errors)) {
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+        $normalizedAnswer = strtolower(trim($securityAnswer));
+        $securityAnswerHash = password_hash($normalizedAnswer, PASSWORD_DEFAULT);
 
         $stmt = $mysqli->prepare(
-            "INSERT INTO patients (
-                first_name, last_name, email, phone, birth_date, gender,
-                password_hash, security_question, security_answer, notes
-             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            'INSERT INTO patients (first_name, last_name, email, phone, gender, birth_date, password_hash, security_question, security_answer) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
 
-            if ($stmt) {
-                $first_name_param = $first_name;
-                $last_name_param = $last_name;
-                $email_param = $email;
-                $phone_param = $phone;
-                $gender_param = $gender;
-                $password_hash_param = $password_hash;
-                $security_question_param = $security_question;
-                $security_answer_param = $security_answer_hash;
-                $notes_param = $notes;
-
-                $stmt->bind_param(
-                    'ssssssssss',
-                    $first_name_param,
-                    $last_name_param,
-                    $email_param,
-                    $phone_param,
-                    $birth_date_param,
-                    $gender_param,
-                    $password_hash_param,
-                    $security_question_param,
-                    $security_answer_param,
-                    $notes_param
-                );
-
-                if ($stmt->execute()) {
-                    $stmt->close();
-                    $success = true;
-                    $first_name = $last_name = $email = $phone = $birth_date = $gender = $notes = '';
-                    $security_question = $security_answer = '';
-                    $terms_accepted = false;
-                } else {
-                    if ($mysqli->errno === 1062) {
-                        $errors['email'] = 'This email is already registered.';
-                    } else {
-                        $errors['general'] = 'An unexpected error occurred. Please try again later.';
-                    }
-                    $stmt->close();
-                }
+        if ($stmt) {
+            $stmt->bind_param('sssssssss', $firstName, $lastName, $email, $phone, $gender, $birthDate, $passwordHash, $securityQuestion, $securityAnswerHash);
+            if ($stmt->execute()) {
+                $stmt->close();
+                header('Location: login.php?registered=success');
+                exit;
             } else {
-                $errors['general'] = 'Could not prepare registration statement.';
+                $errors['general'] = 'An unexpected database error occurred. Please try again.';
+                $stmt->close();
             }
+        } else {
+            $errors['general'] = 'Could not prepare database statement.';
+        }
     }
 }
 ?>
@@ -155,218 +88,119 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Patient Registration - Hospital Appointment System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <title>Register Patient - Hospital Appointment System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="bg-light auth-page">
-<div class="container py-4 py-md-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8 col-xl-7">
-            <div class="card shadow-sm auth-card">
-                <div class="card-header bg-primary text-white text-center">
-                    <h4 class="mb-0">Patient Registration</h4>
-                    <p class="mb-0 small auth-card-subtitle">Create a patient account only</p>
-                </div>
-                <div class="card-body">
-                    <?php if (!empty($errors['general'])): ?>
-                        <div class="alert alert-danger">
-                            <?php echo htmlspecialchars($errors['general'], ENT_QUOTES, 'UTF-8'); ?>
-                        </div>
-                    <?php endif; ?>
 
-                    <?php if ($success): ?>
-                        <div class="alert alert-success">
-                            Registration successful. You can now log in.
-                        </div>
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm py-3 mb-4">
+    <div class="container">
+        <a class="navbar-brand fw-bold text-primary" href="index.php">
+            <i class="fa-solid fa-hospital-user me-2"></i>Çukurova Hospital
+        </a>
+    </div>
+</nav>
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow-sm auth-card">
+                <div class="card-header bg-primary text-white text-center py-3">
+                    <h4 class="mb-1">Create Patient Account</h4>
+                    <p class="mb-0 small auth-card-subtitle">Please fill out the form below to register</p>
+                </div>
+                <div class="card-body p-4">
+                    
+                    <?php if (!empty($errors['general'])): ?>
+                        <div class="alert alert-danger"><?php echo htmlspecialchars($errors['general'], ENT_QUOTES, 'UTF-8'); ?></div>
                     <?php endif; ?>
 
                     <form method="post" novalidate>
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="first_name" class="form-label">First Name</label>
-                                <input type="text"
-                                       class="form-control <?php echo isset($errors['first_name']) ? 'is-invalid' : ''; ?>"
-                                       id="first_name" name="first_name"
-                                       value="<?php echo htmlspecialchars($first_name, ENT_QUOTES, 'UTF-8'); ?>"
-                                       required>
-                                <?php if (isset($errors['first_name'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['first_name'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="last_name" class="form-label">Last Name</label>
-                                <input type="text"
-                                       class="form-control <?php echo isset($errors['last_name']) ? 'is-invalid' : ''; ?>"
-                                       id="last_name" name="last_name"
-                                       value="<?php echo htmlspecialchars($last_name, ENT_QUOTES, 'UTF-8'); ?>"
-                                       required>
-                                <?php if (isset($errors['last_name'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['last_name'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <label class="form-label">First Name</label>
+                                <input type="text" class="form-control <?php echo isset($errors['first_name']) ? 'is-invalid' : ''; ?>" name="first_name" value="<?php echo htmlspecialchars($firstName, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                <?php if (isset($errors['first_name'])): ?><div class="invalid-feedback"><?php echo $errors['first_name']; ?></div><?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email"
-                                       class="form-control <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>"
-                                       id="email" name="email"
-                                       value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>"
-                                       required>
-                                <?php if (isset($errors['email'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['email'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <label class="form-label">Last Name</label>
+                                <input type="text" class="form-control <?php echo isset($errors['last_name']) ? 'is-invalid' : ''; ?>" name="last_name" value="<?php echo htmlspecialchars($lastName, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                <?php if (isset($errors['last_name'])): ?><div class="invalid-feedback"><?php echo $errors['last_name']; ?></div><?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="phone" class="form-label">Phone</label>
-                                <input type="text"
-                                       class="form-control <?php echo isset($errors['phone']) ? 'is-invalid' : ''; ?>"
-                                       id="phone" name="phone"
-                                       value="<?php echo htmlspecialchars($phone, ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php if (isset($errors['phone'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['phone'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <label class="form-label">Email Address</label>
+                                <input type="email" class="form-control <?php echo isset($errors['email']) ? 'is-invalid' : ''; ?>" name="email" value="<?php echo htmlspecialchars($email, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                <?php if (isset($errors['email'])): ?><div class="invalid-feedback d-block"><?php echo $errors['email']; ?></div><?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="birth_date" class="form-label">Birth Date</label>
-                                <input type="date"
-                                       class="form-control <?php echo isset($errors['birth_date']) ? 'is-invalid' : ''; ?>"
-                                       id="birth_date" name="birth_date"
-                                       value="<?php echo htmlspecialchars($birth_date, ENT_QUOTES, 'UTF-8'); ?>">
-                                <?php if (isset($errors['birth_date'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['birth_date'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <label class="form-label">Phone Number</label>
+                                <input type="text" class="form-control <?php echo isset($errors['phone']) ? 'is-invalid' : ''; ?>" name="phone" value="<?php echo htmlspecialchars($phone, ENT_QUOTES, 'UTF-8'); ?>" placeholder="e.g. 05551234567" required>
+                                <?php if (isset($errors['phone'])): ?><div class="invalid-feedback"><?php echo $errors['phone']; ?></div><?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label d-block">Gender</label>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="gender" id="gender_m"
-                                           value="M" <?php echo $gender === 'M' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="gender_m">Male</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="gender" id="gender_f"
-                                           value="F" <?php echo $gender === 'F' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="gender_f">Female</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="gender" id="gender_o"
-                                           value="Other" <?php echo $gender === 'Other' ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="gender_o">Other</label>
-                                </div>
-                                <?php if (isset($errors['gender'])): ?>
-                                    <div class="text-danger small mt-1">
-                                        <?php echo htmlspecialchars($errors['gender'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="security_question" class="form-label">Security Question</label>
-                                <select class="form-select <?php echo isset($errors['security_question']) ? 'is-invalid' : ''; ?>"
-                                        id="security_question" name="security_question" required>
-                                    <option value="">Choose a question...</option>
-                                    <?php foreach ($securityQuestions as $key => $label): ?>
-                                        <option value="<?php echo htmlspecialchars($key, ENT_QUOTES, 'UTF-8'); ?>"
-                                            <?php echo $security_question === $key ? 'selected' : ''; ?>>
-                                            <?php echo htmlspecialchars($label, ENT_QUOTES, 'UTF-8'); ?>
-                                        </option>
-                                    <?php endforeach; ?>
+                                <label class="form-label">Gender</label>
+                                <select class="form-select <?php echo isset($errors['gender']) ? 'is-invalid' : ''; ?>" name="gender" required>
+                                    <option value="">Select...</option>
+                                    <option value="Male" <?php echo $gender === 'Male' ? 'selected' : ''; ?>>Male</option>
+                                    <option value="Female" <?php echo $gender === 'Female' ? 'selected' : ''; ?>>Female</option>
+                                    <option value="Other" <?php echo $gender === 'Other' ? 'selected' : ''; ?>>Other</option>
                                 </select>
-                                <?php if (isset($errors['security_question'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['security_question'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <?php if (isset($errors['gender'])): ?><div class="invalid-feedback"><?php echo $errors['gender']; ?></div><?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="security_answer" class="form-label">Security Answer</label>
-                                <input type="text"
-                                       class="form-control <?php echo isset($errors['security_answer']) ? 'is-invalid' : ''; ?>"
-                                       id="security_answer" name="security_answer"
-                                       value="<?php echo htmlspecialchars($security_answer, ENT_QUOTES, 'UTF-8'); ?>"
-                                       autocomplete="off" required>
-                                <?php if (isset($errors['security_answer'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['security_answer'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <label class="form-label">Birth Date</label>
+                                <input type="date" class="form-control <?php echo isset($errors['birth_date']) ? 'is-invalid' : ''; ?>" name="birth_date" value="<?php echo htmlspecialchars($birthDate, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                <?php if (isset($errors['birth_date'])): ?><div class="invalid-feedback"><?php echo $errors['birth_date']; ?></div><?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="password" class="form-label">Password</label>
-                                <input type="password"
-                                       class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>"
-                                       id="password" name="password" required>
-                                <?php if (isset($errors['password'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['password'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control <?php echo isset($errors['password']) ? 'is-invalid' : ''; ?>" name="password" required>
+                                <?php if (isset($errors['password'])): ?><div class="invalid-feedback"><?php echo $errors['password']; ?></div><?php endif; ?>
                             </div>
 
                             <div class="col-md-6">
-                                <label for="confirm_password" class="form-label">Confirm Password</label>
-                                <input type="password"
-                                       class="form-control <?php echo isset($errors['confirm_password']) ? 'is-invalid' : ''; ?>"
-                                       id="confirm_password" name="confirm_password" required>
-                                <?php if (isset($errors['confirm_password'])): ?>
-                                    <div class="invalid-feedback">
-                                        <?php echo htmlspecialchars($errors['confirm_password'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control <?php echo isset($errors['confirm_password']) ? 'is-invalid' : ''; ?>" name="confirm_password" required>
+                                <?php if (isset($errors['confirm_password'])): ?><div class="invalid-feedback"><?php echo $errors['confirm_password']; ?></div><?php endif; ?>
                             </div>
 
                             <div class="col-12">
-                                <label for="notes" class="form-label">Medical Notes / Additional Information</label>
-                                <textarea
-                                    class="form-control <?php echo isset($errors['notes']) ? 'is-invalid' : ''; ?>"
-                                    id="notes" name="notes" rows="3"
-                                    placeholder="Describe any important medical history, allergies, or other notes."><?php echo htmlspecialchars($notes, ENT_QUOTES, 'UTF-8'); ?></textarea>
-                                <?php if (isset($errors['notes'])): ?>
-                                    <div class="invalid-feedback d-block">
-                                        <?php echo htmlspecialchars($errors['notes'], ENT_QUOTES, 'UTF-8'); ?>
-                                    </div>
-                                <?php endif; ?>
+                                <hr class="my-3">
+                                <h5 class="text-secondary h6 mb-3"><i class="fa-solid fa-shield-halved me-1"></i> Security Verification</h5>
                             </div>
 
-                            <div class="col-12">
-                                <div class="form-check">
-                                    <input class="form-check-input <?php echo isset($errors['terms']) ? 'is-invalid' : ''; ?>"
-                                           type="checkbox" value="1" id="terms" name="terms"
-                                        <?php echo $terms_accepted ? 'checked' : ''; ?>>
-                                    <label class="form-check-label" for="terms">
-                                        I agree to the processing of my personal data according to the hospital's privacy policy.
-                                    </label>
-                                    <?php if (isset($errors['terms'])): ?>
-                                        <div class="invalid-feedback d-block">
-                                            <?php echo htmlspecialchars($errors['terms'], ENT_QUOTES, 'UTF-8'); ?>
-                                        </div>
-                                    <?php endif; ?>
+                            <div class="col-md-6">
+                                <label class="form-label">Security Question</label>
+                                <select class="form-select <?php echo isset($errors['security_question']) ? 'is-invalid' : ''; ?>" name="security_question" required>
+                                    <option value="">Select...</option>
+                                    <option value="What is your mother's maiden name?" <?php echo $securityQuestion === "What is your mother's maiden name?" ? 'selected' : ''; ?>>What is your mother's maiden name?</option>
+                                    <option value="What was the name of your first pet?" <?php echo $securityQuestion === "What was the name of your first pet?" ? 'selected' : ''; ?>>What was the name of your first pet?</option>
+                                    <option value="What is your favorite book?" <?php echo $securityQuestion === "What is your favorite book?" ? 'selected' : ''; ?>>What is your favorite book?</option>
+                                </select>
+                                <?php if (isset($errors['security_question'])): ?><div class="invalid-feedback"><?php echo $errors['security_question']; ?></div><?php endif; ?>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Your Answer</label>
+                                <input type="text" class="form-control <?php echo isset($errors['security_answer']) ? 'is-invalid' : ''; ?>" name="security_answer" value="<?php echo htmlspecialchars($securityAnswer, ENT_QUOTES, 'UTF-8'); ?>" required>
+                                <?php if (isset($errors['security_answer'])): ?><div class="invalid-feedback"><?php echo $errors['security_answer']; ?></div><?php endif; ?>
+                            </div>
+
+                            <div class="col-12 pt-4">
+                                <button type="submit" class="btn btn-primary w-100 btn-lg mb-3">Register</button>
+                                <div class="text-center text-muted small">
+                                    Already have a patient account? <a href="login.php" class="fw-semibold text-primary text-decoration-none">Sign In Here</a>
                                 </div>
                             </div>
 
-                            <div class="col-12 d-flex justify-content-between align-items-center mt-3">
-                                <button type="submit" class="btn btn-primary">
-                                    Register
-                                </button>
-                                <a href="login.php?role=patient" class="btn btn-link">Already have an account? Login</a>
-                            </div>
                         </div>
                     </form>
                 </div>
@@ -374,11 +208,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-        crossorigin="anonymous"></script>
-<script src="js/script.js"></script>
 </body>
 </html>
-
